@@ -40,6 +40,13 @@ Run del 24-10-2026 su runner Apple Silicon. Risultati completi nel branch `ci-re
 
 Tempi sulla GPU virtualizzata del runner ("Apple Paravirtual device", molto più lenta di un Mac reale): 1080p circa 35 ms/frame, 4K circa 140 ms/frame. CPU dello stesso runner: circa 0.7 s e 3 s.
 
+## Versione 1.1.0 (run GitHub 40130737602)
+
+- GPU contro CPU su macOS 15: **29/29**. Con fast math restano differenze isolate su 3–6 pixel di bordo antialiasing (perforazioni/gate) e uno scarto medio di 1.7·10⁻³ solo nel caso di stress con valori estremi; con Metal in modalità precisa lo scarto massimo è 2·10⁻⁵ ovunque.
+- Tempi sulla GPU virtualizzata del runner, 1080p con i default: **8 ms/frame** (1.0: 36 ms). Modalità precisa: 25 ms.
+- Grana v2: RMS a 48 µm 7.90 contro 7.93, legge dell'apertura entro 0.7%, Double-X 14.33 contro 14.38.
+- Fotogrammi vicini: in 150 inquadrature di prova nessun vicino visibile viene saltato; 180 richieste su 300 risparmiate.
+
 ## Non ancora eseguiti - da fare sul tuo Mac
 
 1. Caricamento in **DaVinci Resolve**, comparsa in OpenFX › PSDV, comportamento dell'interfaccia (gruppi, preset, sincronizzazione con Custom).
