@@ -1,0 +1,152 @@
+[
+ {
+  "test": "identity: every section off, encoding 0",
+  "ok": true,
+  "detail": "max relative error 2.9e-05 (float coordinate round-trip; < 1/4 of a 12-bit code)"
+ },
+ {
+  "test": "identity: every section off, encoding 1",
+  "ok": true,
+  "detail": "max relative error 5.2e-05 (float coordinate round-trip; < 1/4 of a 12-bit code)"
+ },
+ {
+  "test": "identity: every section off, encoding 2",
+  "ok": true,
+  "detail": "max relative error 1.2e-04 (float coordinate round-trip; < 1/4 of a 12-bit code)"
+ },
+ {
+  "test": "grain: RMS measured through a 48 um aperture equals the data-sheet value",
+  "ok": true,
+  "detail": "input RMS 8.0 -> measured 7.81 at 43.0 um (model 7.93)"
+ },
+ {
+  "test": "grain: aperture law (Selwyn) across apertures",
+  "ok": true,
+  "detail": "3um 43.00/43.18, 6um 34.11/34.56, 12um 22.71/23.11, 24um 13.25/13.47, 43um 7.81/7.93, 86um 4.04/4.12; worst 1.8%"
+ },
+ {
+  "test": "grain: Double-X 5222 preset reproduces RMS 14 (scaled to the density of grey)",
+  "ok": true,
+  "detail": "measured 14.07, model 14.35 (D at grey 1.13; RMS 14 is quoted at D = 1.0)"
+ },
+ {
+  "test": "grain: new pattern every frame, deterministic",
+  "ok": true,
+  "detail": "corr t/t+1 +0.0006, repeat diff 0.0e+00"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 1, 1920x1080",
+  "ok": true,
+  "detail": "picture 1456x1080px centre (960.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 0, 1920x1080",
+  "ok": true,
+  "detail": "picture 1470x1080px centre (960.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 2, 1920x1080",
+  "ok": true,
+  "detail": "picture 1480x1080px centre (960.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 5, 1920x1080",
+  "ok": true,
+  "detail": "picture 1440x1080px centre (960.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 1, 1440x1080",
+  "ok": true,
+  "detail": "picture 1440x1068px centre (720.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 0, 1440x1080",
+  "ok": true,
+  "detail": "picture 1440x1058px centre (720.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 2, 1440x1080",
+  "ok": true,
+  "detail": "picture 1440x1052px centre (720.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 5, 1440x1080",
+  "ok": true,
+  "detail": "picture 1440x1080px centre (720.0,540.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 1, 1080x1920",
+  "ok": true,
+  "detail": "picture 1080x800px centre (540.0,960.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 0, 1080x1920",
+  "ok": true,
+  "detail": "picture 1080x794px centre (540.0,960.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 2, 1080x1920",
+  "ok": true,
+  "detail": "picture 1080x788px centre (540.0,960.0); outside max 0.0"
+ },
+ {
+  "test": "framing: Fit Gate To Screen, format 5, 1080x1920",
+  "ok": true,
+  "detail": "picture 1080x810px centre (540.0,960.0); outside max 0.0"
+ },
+ {
+  "test": "neighbours: above = previous, centre = current, below = next",
+  "ok": true,
+  "detail": "read [np.int64(344), np.int64(345), np.int64(346)]"
+ },
+ {
+  "test": "neighbours Off: frames above/below are black",
+  "ok": true,
+  "detail": "value [0. 0. 0.]"
+ },
+ {
+  "test": "gate weave: Vertical Weave 10.0 um rms produces that movement on the film",
+  "ok": true,
+  "detail": "measured 8.8 um rms over 30 frames"
+ },
+ {
+  "test": "gate weave: Vertical Weave 40.0 um rms produces that movement on the film",
+  "ok": true,
+  "detail": "measured 34.6 um rms over 30 frames"
+ },
+ {
+  "test": "perforations stay fixed while the picture weaves",
+  "ok": true,
+  "detail": "perforation top rows {np.int64(429)}"
+ },
+ {
+  "test": "sweep: 9 formats x 3 neighbour modes x 4 emulsions x 3 perforation styles",
+  "ok": true,
+  "detail": "324 renders, 0 with NaN/Inf, 25s"
+ },
+ {
+  "test": "extreme values on every slider",
+  "ok": true,
+  "detail": "nonfinite 0, range 0.370..0.635"
+ },
+ {
+  "test": "defaults render at 1440x1080",
+  "ok": true,
+  "detail": "nonfinite 0"
+ },
+ {
+  "test": "defaults render at 3840x2160",
+  "ok": true,
+  "detail": "nonfinite 0"
+ },
+ {
+  "test": "defaults render at 1080x1920",
+  "ok": true,
+  "detail": "nonfinite 0"
+ },
+ {
+  "test": "defaults render at 720x480",
+  "ok": true,
+  "detail": "nonfinite 0"
+ }
+]

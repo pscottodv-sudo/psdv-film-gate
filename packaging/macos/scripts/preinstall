@@ -1,0 +1,4 @@
+#!/bin/bash
+# Remove a previous version so no stale files remain inside the bundle.
+rm -rf "/Library/OFX/Plugins/psdv-film-gate.ofx.bundle"
+exit 0

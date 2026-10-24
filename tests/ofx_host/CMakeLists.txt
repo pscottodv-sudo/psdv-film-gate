@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.20)
+project(psdv_ofx_host CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(OPENFX_DIR "" CACHE PATH "OpenFX checkout")
+find_package(EXPAT REQUIRED)
+file(GLOB HS_SRC ${OPENFX_DIR}/HostSupport/src/*.cpp)
+add_library(OfxHost STATIC ${HS_SRC})
+target_include_directories(OfxHost PUBLIC ${OPENFX_DIR}/include ${OPENFX_DIR}/HostSupport/include)
+target_link_libraries(OfxHost PUBLIC EXPAT::EXPAT ${CMAKE_DL_LIBS})
+add_executable(psdv_ofx_host host_main.cpp hostDemoHostDescriptor.cpp hostDemoEffectInstance.cpp
+               hostDemoClipInstance.cpp hostDemoParamInstance.cpp)
+target_link_libraries(psdv_ofx_host PRIVATE OfxHost)

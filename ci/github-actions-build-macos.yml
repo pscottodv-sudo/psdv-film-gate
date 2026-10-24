@@ -1,0 +1,40 @@
+# TEMPLATE - copy to .github/workflows/build-macos.yml in a NEW repository of yours.
+# Builds the universal macOS bundle and the .pkg installer on a GitHub-hosted Mac.
+# Signing/notarization secrets are optional (see docs/README.md, section "Firma").
+name: build-macos
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    env:
+      HAS_CERTS: ${{ secrets.MACOS_CERTS_P12 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import signing certificates (optional)
+        if: env.HAS_CERTS == 'true'
+        env:
+          P12: ${{ secrets.MACOS_CERTS_P12 }}
+          P12_PASSWORD: ${{ secrets.MACOS_CERTS_PASSWORD }}
+        run: |
+          echo "$P12" | base64 --decode > certs.p12
+          security create-keychain -p ci build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci build.keychain
+          security import certs.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
+      - name: Build bundle
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.CODESIGN_IDENTITY }}
+        run: ./scripts/build_macos.sh
+      - name: Build installer
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.CODESIGN_IDENTITY }}
+          INSTALLER_IDENTITY: ${{ secrets.INSTALLER_IDENTITY }}
+        run: ./scripts/make_installer_macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: psdv-film-gate-macos
+          path: dist/*

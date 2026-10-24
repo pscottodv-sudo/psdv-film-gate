@@ -1,0 +1,84 @@
+# Builds psdv-film gate emulation on GitHub's Apple Silicon Macs and tests the
+# Metal path for real: offline Metal compile, runtime compile through the
+# plugin's own code, GPU vs CPU comparison, OFX host load, .pkg installer.
+name: metal-test
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Environment
+        run: |
+          sw_vers; xcodebuild -version; uname -m
+          system_profiler SPDisplaysDataType | grep -E "Chipset|Metal|Vendor" || true
+
+      - name: Build plugin + GPU test (universal)
+        run: |
+          set -o pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPSDV_BUILD_TESTS=OFF -DPSDV_BUILD_GPU_TEST=ON
+          cmake --build build -j 4 2>&1 | tee build.log
+          echo "--- warnings in our sources:"; grep -E "psdv-film-gate/(src|tests)/.*warning" build.log || echo none
+
+      - name: Check bundle binary
+        run: |
+          BIN=build/psdv-film-gate.ofx.bundle/Contents/MacOS/psdv-film-gate.ofx
+          lipo -info "$BIN"
+          nm -gU "$BIN" | grep OfxGet
+          otool -L "$BIN"
+          codesign --force --sign - build/psdv-film-gate.ofx.bundle && codesign --verify --verbose build/psdv-film-gate.ofx.bundle
+
+      - name: GPU vs CPU comparison (Metal runtime compile + render)
+        run: |
+          set -o pipefail
+          mkdir -p out
+          build/psdv_gpu_compare out 2>&1 | tee out/console.txt
+
+      - name: Offline Metal compile (xcrun metal)
+        if: always()
+        run: |
+          set -o pipefail
+          if ! xcrun -sdk macosx metal -v >/dev/null 2>&1; then
+            xcodebuild -downloadComponent MetalToolchain || true
+          fi
+          xcrun -sdk macosx metal -std=metal3.0 -Wall -c out/psdv_kernel.metal -o out/psdv_kernel.air 2>&1 | tee out/metal_offline.txt
+          xcrun -sdk macosx metallib out/psdv_kernel.air -o out/psdv_kernel.metallib
+          ls -la out/psdv_kernel.metallib
+
+      - name: Load the plugin in an OFX host (CPU path)
+        if: always()
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          cmake -S tests/ofx_host -B hostbuild -DOPENFX_DIR="$PWD/build/_deps/openfx-src" -DCMAKE_BUILD_TYPE=Release
+          cmake --build hostbuild -j 4
+          export OFX_PLUGIN_PATH="$PWD/build"
+          hostbuild/psdv_ofx_host --list | tee out/ofx_host_list.txt | head -12
+          hostbuild/psdv_ofx_host --size 960 540 --range 0 47 --frames 0,24,47 --out out/host | tee out/ofx_host_render.txt
+
+      - name: Build .pkg installer
+        if: matrix.os == 'macos-14'
+        run: |
+          ./scripts/make_installer_macos.sh
+          pkgutil --payload-files dist/*.pkg | head
+
+      - name: Summary
+        if: always()
+        run: |
+          cat out/report.md >> "$GITHUB_STEP_SUMMARY" || echo "no report" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: psdv-film-gate-${{ matrix.os }}
+          path: |
+            out/
+            dist/
+            build.log

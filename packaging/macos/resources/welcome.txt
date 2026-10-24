@@ -1,0 +1,5 @@
+psdv-film gate emulation - OpenFX plugin for DaVinci Resolve (macOS, Metal).
+
+The plugin is installed in /Library/OFX/Plugins/psdv-film-gate.ofx.bundle.
+Quit DaVinci Resolve before installing; after installation open Resolve and
+find "psdv-film gate emulation" in Effects > OpenFX > PSDV.

@@ -1,0 +1,8 @@
+build/
+build-*/
+hostbuild/
+tests/ofx_host/build/
+dist/
+out/
+__pycache__/
+.DS_Store
