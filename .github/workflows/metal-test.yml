@@ -90,6 +90,7 @@ jobs:
           cp out/*.md out/*.txt out/*.json "$R/out/" 2>/dev/null || true
           cp out/defaults_super8_edge_leaks_*.png out/all_sections_off_identity_*.png "$R/out/" 2>/dev/null || true
           ls dist > "$R/out/dist_files.txt" 2>/dev/null || true
+          mkdir -p "$R/dist"; cp dist/*.pkg dist/*.sha256 "$R/dist/" 2>/dev/null || true
           cp build.log "$R/" 2>/dev/null || true
           cd "$R"
           git init -q -b results
