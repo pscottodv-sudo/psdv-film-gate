@@ -244,6 +244,7 @@ int main(int argc, char** argv)
                 return 1;
             }
         }
+        psdv_prepare(p);
         std::vector<float> a, b, c, gpu((size_t)k.w * k.h * 4, -1.0f), cpu((size_t)k.w * k.h * 4);
         makeFrame(a, k.w, k.h, p.frameIndex - 1);
         makeFrame(b, k.w, k.h, p.frameIndex);

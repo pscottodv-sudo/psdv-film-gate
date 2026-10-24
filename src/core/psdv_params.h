@@ -60,6 +60,8 @@ struct PsdvParams
     float shadowResponse, midResponse, highlightResponse;
     float colorGrain;     // dye layer independence 0..1
     float negGamma;       // characteristic curve gamma used for negatives
+    float grainSoftness;  // scanner / print softness of the grain (pixels x 0.6)
+    float grainClumping;  // share of the grain in large clumps 0..1
     int   grainSeed;
 
     // ---- light leaks
@@ -74,4 +76,8 @@ struct PsdvParams
     float flares;         // warm flares entering from the frame sides
     float burn;           // organic burn patches
     int   leakSeed;
+
+    // ---- per-frame values, filled by psdv_prepare() on the host (not UI parameters)
+    float regX[3], regY[3], regR[3];   // registration of frames T+1, T, T-1 (index slot + 1)
+    float flick[3];                    // exposure flicker (stops) of the same frames
 };

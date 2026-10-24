@@ -55,8 +55,8 @@
   inline float ps_cos(float x) { return std::cos(x); }
   inline float ps_atan2(float y, float x) { return std::atan2(y, x); }
   inline float ps_abs(float x) { return std::fabs(x); }
-  inline float ps_min(float a, float b) { return std::fmin(a, b); }
-  inline float ps_max(float a, float b) { return std::fmax(a, b); }
+  inline float ps_min(float a, float b) { return a < b ? a : b; }   // inlined (fmin is a library call)
+  inline float ps_max(float a, float b) { return a > b ? a : b; }
 #endif
 
 PS_INLINE float ps_sat(float v) { return ps_min(ps_max(v, 0.0f), 1.0f); }

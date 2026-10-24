@@ -18,7 +18,8 @@ Il valore *RMS Granularity* segue la definizione Kodak: deviazione standard dell
 
 Il modello fisico e i suoi elementi:
 
-- Nuvole di colorante gaussiane da 6.5 µm e 15 µm, granularità proporzionale a √D: modello di letteratura [M] (Stephenson & Saunders 2007).
+- Spettro gaussiano a nuvole di colorante e granularità proporzionale a √D: modello di letteratura [M] (Stephenson & Saunders 2007). Dalla 1.1 le scale sono tre (lunghezze di correlazione 3.5 / 8 / 20 µm × Grain Size), con quote di varianza a 48 µm dipendenti da *Grain Clumping*: questa struttura è una scelta di aspetto **[E]**, la calibrazione RMS a 48 µm resta esatta.
+- Scala fine di sola luminanza, presenza delle nuvole più rada a bassa densità, larghezza minima pari al pixel e *Grain Softness* (scanner): **[E]**, scelte per evitare l'aspetto da rumore digitale.
 - Legge dell'apertura σ·√A costante per aperture grandi: [M] (Higgins & Stultz 1959).
 - Curve caratteristiche, granularità per strato, matrice cromatica e fattori di dimensione: [E].
 

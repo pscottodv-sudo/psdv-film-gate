@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.0 - velocità e grana
+**Velocità**
+- I fotogrammi sopra e sotto ora sono di default **Repeat Current Frame (fast)**. *Real Previous / Next* chiede a Resolve due fotogrammi in più per ogni frame, quindi fino a 3 volte la decodifica e il lavoro dei nodi a monte: era la causa principale del playback a scatti. Usalo per il render finale.
+- Anche in modalità Real, t−1 / t+1 vengono chiesti **solo se sono visibili** sullo schermo (es. con *Fill Screen* o fotogrammi grandi non viene chiesto nulla).
+- Campionamento dell'immagine: un solo decode per pixel invece di uno per texel, 7 campioni invece di 13 per le sfocature piccole.
+- Weave e flicker calcolati una volta per frame invece che per pixel; grana: le posizioni delle nuvole sono condivise dai tre strati (metà dei calcoli).
+- Metal compilato in fast math.
+- Sulla CPU il rendering completo è circa il 30% più veloce. Il guadagno maggiore in Resolve viene dai fotogrammi vicini.
+
+**Grana (v2)**
+- Non sembra più rumore digitale. Tre scale (nuvole di colorante, gruppi, ammassi) invece di due; la scala più fine è di sola luminanza, il colore vive nei gruppi e negli ammassi; le nuvole non sono mai più piccole del pixel (prima diventavano puntini sale-e-pepe); gli ammassi sono più radi nelle zone di bassa densità.
+- Nuovi controlli **Grain Clumping** (grana fine e uniforme ↔ ammassi organici) e **Grain Softness** (morbidezza di scanner/stampa; 0 = nitida).
+- La calibrazione RMS a 48 µm resta: misurato 7.90 contro 7.93 atteso, legge dell'apertura entro lo 0.7%, Double-X 14.33 contro 14.38.
+
 ## 1.0.0 - prima versione OFX
 - Nuovo plugin OpenFX C++ con rendering Metal (macOS universale) e percorso CPU; sostituisce il DCTL PSDV Filmstrip v2.x.
 - Quattro sezioni indipendenti, ognuna con Enable, Preset e controlli manuali; un preset passa a *Custom* quando modifichi uno slider.

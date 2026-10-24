@@ -37,7 +37,9 @@ id<MTLComputePipelineState> pipelineFor(id<MTLDevice> device)
     if (it != gPipelines.end()) return it->second;
     NSError* err = nil;
     MTLCompileOptions* opt = [MTLCompileOptions new];
-    opt.fastMathEnabled = NO;   // keep the hash and grain statistics identical to the CPU path
+    // Fast math: the hashes are integer, so the grain pattern is unaffected; the
+    // transcendental functions become much cheaper (GPU vs CPU checked in CI).
+    opt.fastMathEnabled = YES;
     id<MTLLibrary> lib = [device newLibraryWithSource:[NSString stringWithUTF8String:kPsdvKernelSource] options:opt error:&err];
     if (!lib) {
         logError(std::string("Metal compile failed: ") + (err ? err.localizedDescription.UTF8String : "unknown"));

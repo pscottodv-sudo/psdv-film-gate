@@ -2,12 +2,12 @@
  {
   "test": "identity: every section off, encoding 0",
   "ok": true,
-  "detail": "max relative error 2.9e-05 (float coordinate round-trip; < 1/4 of a 12-bit code)"
+  "detail": "max relative error 7.9e-06 (float coordinate round-trip; < 1/4 of a 12-bit code)"
  },
  {
   "test": "identity: every section off, encoding 1",
   "ok": true,
-  "detail": "max relative error 5.2e-05 (float coordinate round-trip; < 1/4 of a 12-bit code)"
+  "detail": "max relative error 2.3e-05 (float coordinate round-trip; < 1/4 of a 12-bit code)"
  },
  {
   "test": "identity: every section off, encoding 2",
@@ -17,22 +17,27 @@
  {
   "test": "grain: RMS measured through a 48 um aperture equals the data-sheet value",
   "ok": true,
-  "detail": "input RMS 8.0 -> measured 7.81 at 43.0 um (model 7.93)"
+  "detail": "input RMS 8.0 -> measured 7.90 at 43.0 um (model 7.93)"
  },
  {
   "test": "grain: aperture law (Selwyn) across apertures",
   "ok": true,
-  "detail": "3um 43.00/43.18, 6um 34.11/34.56, 12um 22.71/23.11, 24um 13.25/13.47, 43um 7.81/7.93, 86um 4.04/4.12; worst 1.8%"
+  "detail": "3um 30.81/30.80, 6um 26.03/26.03, 12um 19.05/19.04, 24um 12.38/12.40, 43um 7.90/7.93, 86um 4.38/4.35; worst 0.7%"
  },
  {
   "test": "grain: Double-X 5222 preset reproduces RMS 14 (scaled to the density of grey)",
   "ok": true,
-  "detail": "measured 14.07, model 14.35 (D at grey 1.13; RMS 14 is quoted at D = 1.0)"
+  "detail": "measured 14.33, model 14.38 (D at grey 1.13; RMS 14 is quoted at D = 1.0)"
  },
  {
   "test": "grain: new pattern every frame, deterministic",
   "ok": true,
-  "detail": "corr t/t+1 +0.0006, repeat diff 0.0e+00"
+  "detail": "corr t/t+1 -0.0022, repeat diff 0.0e+00"
+ },
+ {
+  "test": "neighbour frames requested only when visible",
+  "ok": true,
+  "detail": "150 framings, 0 where a visible neighbour would be skipped, 180 of 300 fetches saved"
  },
  {
   "test": "framing: Fit Gate To Screen, format 1, 1920x1080",
@@ -96,8 +101,8 @@
  },
  {
   "test": "neighbours: above = previous, centre = current, below = next",
-  "ok": true,
-  "detail": "read [np.int64(344), np.int64(345), np.int64(346)]"
+  "ok": false,
+  "detail": "read [np.int64(345), np.int64(345), np.int64(345)]"
  },
  {
   "test": "neighbours Off: frames above/below are black",
@@ -122,7 +127,7 @@
  {
   "test": "sweep: 9 formats x 3 neighbour modes x 4 emulsions x 3 perforation styles",
   "ok": true,
-  "detail": "324 renders, 0 with NaN/Inf, 25s"
+  "detail": "324 renders, 0 with NaN/Inf, 18s"
  },
  {
   "test": "extreme values on every slider",

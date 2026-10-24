@@ -51,6 +51,7 @@ int main(int argc, char** argv)
         if (k == "next") { if (!readImg(val.c_str(), next, n)) return 3; p.haveNext = 1; continue; }
         if (!psdvSetParam(p, k, atof(val.c_str()))) { fprintf(stderr, "unknown parameter %s\n", k.c_str()); return 4; }
     }
+    psdv_prepare(p);
     Src s;
     s.img[0] = p.havePrev ? prev.data() : cur.data();
     s.img[1] = cur.data();
@@ -69,6 +70,9 @@ int main(int argc, char** argv)
     FILE* f = fopen(argv[2], "wb");
     fwrite(out.data(), sizeof(float), n, f);
     fclose(f);
+    bool va, vb;
+    psdv_neighbors_visible(p, va, vb);
+    fprintf(stderr, "visible_above=%d visible_below=%d\n", va ? 1 : 0, vb ? 1 : 0);
     fprintf(stderr, "nonfinite=%ld\n", bad);
     return bad ? 5 : 0;
 }

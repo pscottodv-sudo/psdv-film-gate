@@ -45,6 +45,8 @@ def render(img, params=None, prev=None, nxt=None):
             raise RuntimeError(r.stderr)
         out = np.fromfile(os.path.join(td, "out.f32"), np.float32).reshape(h, w, 4)[..., :3]
         nf = int(r.stderr.strip().split("=")[-1])
+        global LAST_STDERR
+        LAST_STDERR = r.stderr
         return out, nf
 
 
@@ -91,10 +93,18 @@ def test_identity():
         record(f"identity: every section off, encoding {enc}", err < 2e-4 and nf == 0, f"max relative error {err:.1e} (float coordinate round-trip; < 1/4 of a 12-bit code)")
 
 
+def grain_model(A, sigma, gs=1.0, clump=0.4):
+    """physical model of the core: three scales, variance shares defined at 48 um"""
+    ls = (0.0035 * gs, 0.0080 * gs, 0.0200 * gs)
+    f3 = 0.15 + 0.55 * clump; f2 = 0.40; f1 = max(1 - f2 - f3, 0.05)
+    aref = math.sqrt(math.pi) * 0.024
+    return sigma * math.sqrt(sum(f * block_var(A, l) / block_var(aref, l) for f, l in zip((f1, f2, f3), ls)))
+
+
 def test_grain_calibration():
     W, H = 3840, 2160
     src = di_enc(np.full((H, W, 3), 0.18, np.float32))
-    p = dict(OFF, grainOn=1, gateOn=0, emulsion=2, rms=8.0, grainSize=1.0, frameIndex=10)
+    p = dict(OFF, grainOn=1, gateOn=0, emulsion=2, rms=8.0, grainSize=1.0, frameIndex=10, grainSoftness=0, grainClumping=0.4)
     out, nf = render(src, p)
     E = di_dec(out[..., 1])
     dx = np.log10(np.maximum(E, 1e-9) / 0.18)
@@ -104,16 +114,14 @@ def test_grain_calibration():
     B = int(round(math.sqrt(math.pi) * 24.0 / (mm * 1000)))
     h2, w2 = (H // B) * B, (W // B) * B
     s48 = dD[:h2, :w2].reshape(h2 // B, B, w2 // B, B).mean(axis=(1, 3)).std()
-    l1, l2 = 0.5 * 0.0065, 0.5 * 0.015
-    aref = math.sqrt(math.pi) * 0.024
-    pred = 0.008 * math.sqrt(0.5 * block_var(B * mm, l1) / block_var(aref, l1) + 0.5 * block_var(B * mm, l2) / block_var(aref, l2))
+    pred = grain_model(B * mm, 0.008)
     record("grain: RMS measured through a 48 um aperture equals the data-sheet value", abs(s48 / pred - 1) < 0.04 and nf == 0,
            f"input RMS 8.0 -> measured {s48*1000:.2f} at {B*mm*1000:.1f} um (model {pred*1000:.2f})")
     rows, worst = [], 0
     for B in (2, 4, 8, 16, 29, 58):
         h2, w2 = (H // B) * B, (W // B) * B
         s = dD[:h2, :w2].reshape(h2 // B, B, w2 // B, B).mean(axis=(1, 3)).std()
-        pr = 0.008 * math.sqrt(0.5 * block_var(B * mm, l1) / block_var(aref, l1) + 0.5 * block_var(B * mm, l2) / block_var(aref, l2))
+        pr = grain_model(B * mm, 0.008)
         worst = max(worst, abs(s / pr - 1)); rows.append(f"{B*mm*1000:.0f}um {s*1000:.2f}/{pr*1000:.2f}")
     record("grain: aperture law (Selwyn) across apertures", worst < 0.06, ", ".join(rows) + f"; worst {worst*100:.1f}%")
 
@@ -122,7 +130,7 @@ def test_grain_double_x():
     """published preset: Double-X 5222 RMS 14, BW negative, gamma 0.65"""
     W, H = 3840, 2160
     src = di_enc(np.full((H, W, 3), 0.18, np.float32))
-    p = dict(OFF, grainOn=1, gateOn=0, emulsion=3, rms=14.0, grainSize=1.2, negGamma=0.65, frameIndex=3)
+    p = dict(OFF, grainOn=1, gateOn=0, emulsion=3, rms=14.0, grainSize=1.2, negGamma=0.65, frameIndex=3, grainSoftness=0, grainClumping=0.7)
     out, _ = render(src, p)
     E = di_dec(out[..., 1])
     x = 0.0
@@ -134,11 +142,32 @@ def test_grain_double_x():
     s48 = dD[:h2, :w2].reshape(h2 // B, B, w2 // B, B).mean(axis=(1, 3)).std()
     D = 0.15 + 0.65 * math.log10(1 + e) / 1.5
     g = math.sqrt(max(D, 0.12) * math.exp(-(max(D, 0.12) - 1) / 2.5))
-    l1, l2 = 0.5 * 0.0065 * 1.2, 0.5 * 0.015 * 1.2
-    aref = math.sqrt(math.pi) * 0.024
-    pred = 0.014 * g * math.sqrt(0.5 * block_var(B * mm, l1) / block_var(aref, l1) + 0.5 * block_var(B * mm, l2) / block_var(aref, l2))
+    pred = grain_model(B * mm, 0.014 * g, gs=1.2, clump=0.7)
     record("grain: Double-X 5222 preset reproduces RMS 14 (scaled to the density of grey)", abs(s48 / pred - 1) < 0.05,
            f"measured {s48*1000:.2f}, model {pred*1000:.2f} (D at grey {D:.2f}; RMS 14 is quoted at D = 1.0)")
+
+
+def test_neighbor_visibility():
+    """frames t-1 / t+1 are requested from the host only when visible: whenever the
+    helper says 'not visible', changing that frame must not change the output"""
+    sc = scene(480, 270, 77)
+    alt = scene(480, 270, 3000)[::-1].copy()
+    cases, wrong, skipped = 0, 0, 0
+    for fmt in (0, 1, 2, 5, 8):
+        for framing, size in ((0, 0.5), (0, 0.76), (0, 0.95), (1, 1), (2, 1)):
+            for spacing in (0.0, 0.12, 0.6):
+                for posY in (0.0, 0.3):
+                    base = dict(OFF, format=fmt, gateFraming=framing, frameSize=size, frameSpacing=spacing, posY=posY,
+                                weaveOn=1, neighbors=1)
+                    ref, _ = render(sc, base, prev=sc, nxt=sc)
+                    va = int(LAST_STDERR.split("visible_above=")[1][0]); vb = int(LAST_STDERR.split("visible_below=")[1][0])
+                    pa, _ = render(sc, base, prev=alt, nxt=sc)
+                    nb, _ = render(sc, base, prev=sc, nxt=alt)
+                    cases += 1
+                    if (np.abs(pa - ref).max() > 1e-6 and not va) or (np.abs(nb - ref).max() > 1e-6 and not vb): wrong += 1
+                    skipped += (not va) + (not vb)
+    record("neighbour frames requested only when visible", wrong == 0,
+           f"{cases} framings, {wrong} where a visible neighbour would be skipped, {skipped} of {2*cases} fetches saved")
 
 
 def test_grain_temporal():
@@ -169,7 +198,7 @@ def test_neighbors():
     W, H = 1920, 1080
     n = 345
     cur, prev, nxt = scene(W, H, n), scene(W, H, n - 1), scene(W, H, n + 1)
-    p = dict(OFF, encoding=2, frameSize=0.28, frameSpacing=0.0, imageFit=1, frameIndex=n, perfOn=0)
+    p = dict(OFF, encoding=2, frameSize=0.28, frameSpacing=0.0, imageFit=1, frameIndex=n, perfOn=0, neighbors=1)
     out, _ = render(cur, p, prev, nxt)
     gw, gh, pitch = 5.69, 4.22, 4.234
     mm = gh / (0.28 * H); vS = (W / H) / (gw / gh)
@@ -244,7 +273,7 @@ def test_sweep():
 
 def main():
     t = time.time()
-    for fn in (test_identity, test_grain_calibration, test_grain_double_x, test_grain_temporal, test_framing, test_neighbors,
+    for fn in (test_identity, test_grain_calibration, test_grain_double_x, test_grain_temporal, test_neighbor_visibility, test_framing, test_neighbors,
                test_weave_um, test_perforations_fixed, test_sweep):
         fn()
     ok = sum(r["ok"] for r in RESULTS)

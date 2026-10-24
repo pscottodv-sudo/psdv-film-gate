@@ -151,22 +151,43 @@ PS_INLINE float psdv_flicker(int frame, PS_CONSTANT_REF PsdvParams& p)
 }
 
 // =============================================================== emulsion grain
-// Dye-cloud field: sparse convolution of Gaussian clouds, one per jittered cell,
-// sigma = 0.35 cell, unit variance (constant measured on 16M samples).
-PS_INLINE float psdv_cloud(float px, float py, int seed)
+// Dye-cloud field (v2): sparse Gaussian clouds, one candidate per jittered cell,
+// sigma = 0.35 cell. The cloud positions are shared by the three dye layers and
+// each layer draws its own presence for every cloud, so the layers are
+// statistically independent while the cost is paid once.
+// Presence is a soft binary event with probability 'occ' (rising with density):
+// thin areas show separate specks, dense areas a fine overlapping texture -
+// the sparse, skewed look of real emulsion instead of symmetric digital noise.
+// Returns the three layer fields, each zero mean and unit variance.
+PS_INLINE ps3 psdv_clouds(float px, float py, int seed, ps3 occ)
 {
     float fx = ps_floor(px), fy = ps_floor(py);
     int ix = (int)fx, iy = (int)fy;
-    float acc = 0.0f;
+    ps3 acc = P3(0.0f, 0.0f, 0.0f);
     for (int dj = -1; dj <= 1; dj++) {
         for (int di = -1; di <= 1; di++) {
-            ps3 c = psdv_cell(ix + di, iy + dj, seed);
-            float dx = px - (fx + (float)di + c.x);
-            float dy = py - (fy + (float)dj + c.y);
-            acc += (c.z - 0.5f) * ps_exp(-(dx * dx + dy * dy) * 4.0816327f);
+            uint h = psdv_hash3(ix + di, iy + dj, seed);
+            float cx = ((float)(h & 1023u) + 0.5f) * (1.0f / 1024.0f);
+            float cy = ((float)((h >> 10) & 1023u) + 0.5f) * (1.0f / 1024.0f);
+            float dx = px - (fx + (float)di + cx);
+            float dy = py - (fy + (float)dj + cy);
+            float w = ps_exp(-(dx * dx + dy * dy) * 4.0816327f);
+            uint h2 = psdv_hash(h ^ 0x9E3779B9u);
+            float u0 = ((float)(h2 & 1023u) + 0.5f) * (1.0f / 1024.0f);
+            float u1 = ((float)((h2 >> 10) & 1023u) + 0.5f) * (1.0f / 1024.0f);
+            float u2 = ((float)((h2 >> 20) & 1023u) + 0.5f) * (1.0f / 1024.0f);
+            // presence minus its mean: zero-mean amplitudes independent of the
+            // position keep the Gaussian spectrum (the aperture law) exact
+            acc = acc + P3(ps_smooth(u0 - 0.06f, u0 + 0.06f, occ.x) - occ.x,
+                           ps_smooth(u1 - 0.06f, u1 + 0.06f, occ.y) - occ.y,
+                           ps_smooth(u2 - 0.06f, u2 + 0.06f, occ.z) - occ.z) * w;
         }
     }
-    return acc * 5.5843f;
+    // unit variance: 5.5843 is the constant for amplitude variance 1/12; here the
+    // amplitude variance is that of the soft presence, occ(1-occ) - 0.0158 (measured)
+    return P3(acc.x * 1.61205f / ps_sqrt(occ.x * (1.0f - occ.x) - 0.0158f),
+              acc.y * 1.61205f / ps_sqrt(occ.y * (1.0f - occ.y) - 0.0158f),
+              acc.z * 1.61205f / ps_sqrt(occ.z * (1.0f - occ.z) - 0.0158f));
 }
 PS_INLINE float psdv_erf(float x)
 {
@@ -199,10 +220,7 @@ PS_INLINE float psdv_gshape(float d)
     float dc = ps_max(d, 0.12f);
     return ps_sqrt(dc * ps_exp(-(dc - 1.0f) / 2.5f));
 }
-PS_INLINE float psdv_layer(float fx, float fy, float c1, float c2, float k1, float k2, int seed)
-{
-    return k1 * psdv_cloud(fx / c1, fy / c1, seed) + k2 * psdv_cloud(fx / c2 + 0.371f, fy / c2 + 0.713f, seed + 1);
-}
+PS_INLINE float psdv_occ(float d) { return ps_clamp(0.18f + 0.14f * d, 0.18f, 0.55f); }
 // E: linear exposure; (fx, fy): film mm of this frame; mmPerPx: film mm per pixel
 PS_INLINE ps3 psdv_grain(ps3 E, float fx, float fy, int frame, float mmPerPx, PS_CONSTANT_REF PsdvParams& p)
 {
@@ -210,13 +228,27 @@ PS_INLINE ps3 psdv_grain(ps3 E, float fx, float fy, int frame, float mmPerPx, PS
     if (sigRef <= 0.0f) return E;
     int bw = p.emulsion >= 2 ? 1 : 0;
     int reversal = (p.emulsion == 1 || p.emulsion == 2) ? 1 : 0;
-    float d1 = 0.0065f * p.grainSize, d2 = 0.015f * p.grainSize;     // dye cloud diameters (mm)
+    float gs = ps_max(p.grainSize, 0.05f);
+    // three structure scales (correlation length, mm): dye clouds, cloud groups, clumps
+    float l1 = 0.0035f * gs, l2 = 0.0080f * gs, l3 = 0.0200f * gs;
+    // share of the variance measured through the 48 um aperture
+    float cl = ps_sat(p.grainClumping);
+    float f3 = 0.15f + 0.55f * cl, f2 = 0.40f, f1 = ps_max(1.0f - f2 - f3, 0.05f);
     float aRef = 0.0425397f;                                          // 48 um circle as a square
-    float l1 = 0.5f * d1, l2 = 0.5f * d2;
-    float k1 = 0.70710678f * ps_sqrt(psdv_blockvar(mmPerPx, l1) / psdv_blockvar(aRef, l1));
-    float k2 = 0.70710678f * ps_sqrt(psdv_blockvar(mmPerPx, l2) / psdv_blockvar(aRef, l2));
-    float c1 = ps_max(0.25f * d1, 0.5f * mmPerPx) / 0.35f;
-    float c2 = ps_max(0.25f * d2, 0.5f * mmPerPx) / 0.35f;
+    // Pixel area: the variance seen by one pixel is the block variance of the
+    // physical field (Selwyn), and the rendered blobs are widened to the pixel
+    // footprint (0.6 px) so the field is never point-sampled below its size -
+    // sub-pixel blobs alias into salt-and-pepper speckle.
+    // Scanner / print softness then widens every scale further and lowers its
+    // variance by (l_pixel / l_soft)^2, like an optical blur of the grain.
+    float pa = 0.6f * mmPerPx, sb = 1.0f * ps_max(p.grainSoftness, 0.0f) * mmPerPx;
+    float q1 = ps_sqrt(l1 * l1 + pa * pa), q2 = ps_sqrt(l2 * l2 + pa * pa), q3 = ps_sqrt(l3 * l3 + pa * pa);
+    float e1 = ps_sqrt(q1 * q1 + sb * sb), e2 = ps_sqrt(q2 * q2 + sb * sb), e3 = ps_sqrt(q3 * q3 + sb * sb);
+    float k1 = ps_sqrt(f1 * psdv_blockvar(mmPerPx, l1) / psdv_blockvar(aRef, l1)) * (q1 / e1);
+    float k2 = ps_sqrt(f2 * psdv_blockvar(mmPerPx, l2) / psdv_blockvar(aRef, l2)) * (q2 / e2);
+    float k3 = ps_sqrt(f3 * psdv_blockvar(mmPerPx, l3) / psdv_blockvar(aRef, l3)) * (q3 / e3);
+    // cell = length / 0.7 (sigma 0.35 cell -> correlation length 0.7 cell)
+    float c1 = e1 / 0.7f, c2 = e2 / 0.7f, c3 = e3 / 0.7f;
     int seed = frame * 8 + p.grainSeed * 100003;
     float efl = 0.00036f;
     ps3 Ef = P3(ps_max(E.x, efl), ps_max(E.y, efl), ps_max(E.z, efl));
@@ -230,16 +262,30 @@ PS_INLINE ps3 psdv_grain(ps3 E, float fx, float fy, int frame, float mmPerPx, PS
     ps3 dx;
     if (bw) {
         ps2 cv = psdv_curve(xl, reversal, p.negGamma);
-        float n = psdv_layer(fx, fy, c1, c2, k1, k2, seed);
+        float o = psdv_occ(cv.x);
+        ps3 oc = P3(o, o, o);
+        ps3 half = P3(0.5f, 0.5f, 0.5f);
+        float n = k1 * psdv_clouds(fx / c1, fy / c1, seed, half).x + k2 * psdv_clouds(fx / c2 + 0.371f, fy / c2 + 0.713f, seed + 1, half).x
+                + k3 * psdv_clouds(fx / c3 + 0.193f, fy / c3 + 0.557f, seed + 2, oc).x;
         float v = sgn * sigRef * trim * psdv_gshape(cv.x) * n / ps_max(cv.y, gfloor);
         dx = P3(v, v, v);
     } else {
         ps2 cr = psdv_curve(ps_log10(Ef.x / 0.18f), reversal, p.negGamma);
         ps2 cg = psdv_curve(ps_log10(Ef.y / 0.18f), reversal, p.negGamma);
         ps2 cb = psdv_curve(ps_log10(Ef.z / 0.18f), reversal, p.negGamma);
-        float dC = 1.00f * psdv_gshape(cr.x) * psdv_layer(fx, fy, c1, c2, k1, k2, seed + 0);
-        float dM = 0.90f * psdv_gshape(cg.x) * psdv_layer(fx, fy, c1, c2, k1, k2, seed + 2);
-        float dY = 1.20f * psdv_gshape(cb.x) * psdv_layer(fx, fy, c1, c2, k1, k2, seed + 4);
+        ps3 oc = P3(psdv_occ(cr.x), psdv_occ(cg.x), psdv_occ(cb.x));
+        ps3 half = P3(0.5f, 0.5f, 0.5f);   // dye clouds and groups: dense, symmetric
+        ps3 n1 = psdv_clouds(fx / c1, fy / c1, seed, half);
+        ps3 n2 = psdv_clouds(fx / c2 + 0.371f, fy / c2 + 0.713f, seed + 1, half);
+        ps3 n3 = psdv_clouds(fx / c3 + 0.193f, fy / c3 + 0.557f, seed + 2, oc);
+        // The finest scale is shared by the three layers: at the scale of a pixel the
+        // scanner and the overlap of the dye spectra leave mostly luminance texture,
+        // and independent RGB speckle at that scale is what reads as digital noise.
+        // Colour variation lives in the cloud groups and clumps.
+        // The yellow (blue-sensitive) layer is the fastest and coarsest.
+        float dC = 1.00f * psdv_gshape(cr.x) * (k1 * n1.x + k2 * n2.x + k3 * n3.x);
+        float dM = 0.90f * psdv_gshape(cg.x) * (k1 * n1.x + k2 * n2.y + k3 * n3.y);
+        float dY = 1.20f * psdv_gshape(cb.x) * (0.80f * k1 * n1.x + k2 * n2.z + 1.25f * k3 * n3.z);
         float dR = dC + 0.10f * dM + 0.02f * dY;
         float dG = 0.20f * dC + dM + 0.08f * dY;
         float dB = 0.05f * dC + 0.35f * dM + dY;
@@ -351,8 +397,10 @@ PS_INLINE ps3 psdv_blend(ps3 E, ps3 L, int mode)
 
 // =============================================================== image sampling
 // SRC must provide: int w, h; ps3 fetch(int k, int x, int y) const  (k: 0 prev, 1 current, 2 next)
+// Filtering happens on the encoded values and the result is decoded once:
+// 1 decode per pixel instead of one per texel (the dominant cost before).
 template <class SRC>
-PS_INLINE ps3 psdv_fetch_bilinear(PS_THREAD const SRC& s, int k, float sx, float sy, int enc)
+PS_INLINE ps3 psdv_fetch_bilinear(PS_THREAD const SRC& s, int k, float sx, float sy)
 {
     float xmax = (float)(s.w - 1), ymax = (float)(s.h - 1);
     sx = ps_clamp(sx, 0.0f, xmax);
@@ -361,29 +409,33 @@ PS_INLINE ps3 psdv_fetch_bilinear(PS_THREAD const SRC& s, int k, float sx, float
     float ax = sx - fx, ay = sy - fy;
     int x0 = (int)fx, y0 = (int)fy;
     int x1 = (int)ps_min(fx + 1.0f, xmax), y1 = (int)ps_min(fy + 1.0f, ymax);
-    ps3 a = psdv_decode(s.fetch(k, x0, y0), enc), b = psdv_decode(s.fetch(k, x1, y0), enc);
-    ps3 c = psdv_decode(s.fetch(k, x0, y1), enc), d = psdv_decode(s.fetch(k, x1, y1), enc);
+    ps3 a = s.fetch(k, x0, y0), b = s.fetch(k, x1, y0);
+    ps3 c = s.fetch(k, x0, y1), d = s.fetch(k, x1, y1);
     return ps_mix3(ps_mix3(a, b, ax), ps_mix3(c, d, ax), ay);
 }
+// Gaussian-weighted sampling: 1 tap when sharp, 7 taps (centre + hexagon) for a
+// blur up to ~1.2 px, 13 taps (two rings) above that.
 template <class SRC>
 PS_INLINE ps3 psdv_sample(PS_THREAD const SRC& s, int k, float su, float sv, float sgx, float sgy, int enc)
 {
     float cx = su * (float)s.w - 0.5f;
     float cy = sv * (float)s.h - 0.5f;
-    ps3 acc = psdv_fetch_bilinear(s, k, cx, cy, enc);
-    if (sgx < 0.3f && sgy < 0.3f) return acc;
+    ps3 acc = psdv_fetch_bilinear(s, k, cx, cy);
+    float sg = ps_max(sgx, sgy);
+    if (sg < 0.3f) return psdv_decode(acc, enc);
     float wsum = 1.0f;
-    for (int ring = 1; ring <= 2; ring++) {
-        float rr = (float)ring;
-        float w = ps_exp(-0.5f * rr * rr);
+    int rings = sg < 1.2f ? 1 : 2;
+    for (int ring = 1; ring <= rings; ring++) {
+        float rr = rings == 1 ? 1.15f : (float)ring;
+        float w = rings == 1 ? 0.52f : ps_exp(-0.5f * rr * rr);
         float rot = ring == 1 ? 0.0f : 0.5235988f;
         for (int j = 0; j < 6; j++) {
             float ang = rot + 1.0471976f * (float)j;
-            acc = acc + psdv_fetch_bilinear(s, k, cx + ps_cos(ang) * rr * sgx, cy + ps_sin(ang) * rr * sgy, enc) * w;
+            acc = acc + psdv_fetch_bilinear(s, k, cx + ps_cos(ang) * rr * sgx, cy + ps_sin(ang) * rr * sgy) * w;
             wsum += w;
         }
     }
-    return acc * (1.0f / wsum);
+    return psdv_decode(acc * (1.0f / wsum), enc);
 }
 
 // =============================================================== the pixel
@@ -424,7 +476,11 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
     float yRoll = yl - (float)frame * pitch;
 
     // ---- registration (picture and gate shadow move together relative to the perforations)
-    ps3 reg = p.weaveOn ? psdv_registration(frame, p) : P3(0.0f, 0.0f, 0.0f);
+    ps3 reg = P3(0.0f, 0.0f, 0.0f);
+    if (p.weaveOn) {
+        if (slot >= -1 && slot <= 1) reg = P3(p.regX[slot + 1], p.regY[slot + 1], p.regR[slot + 1]);   // precomputed
+        else reg = psdv_registration(frame, p);
+    }
     float rx = xx - g.gateCx - reg.x, ry = yl - reg.y;
     float cr = ps_cos(reg.z), sr = ps_sin(reg.z);
     float gx = cr * rx + sr * ry, gy = -sr * rx + cr * ry;
@@ -470,7 +526,7 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
         float sgx = ps_sqrt(blurMM * blurMM * srcPerMMx * srcPerMMx + (aaX > 0.5f ? aaX * aaX : 0.0f));
         E = psdv_sample(s, k, ps_sat(su), ps_sat(sv), sgx, sgy, enc);
         if (bw) { float l = 0.2126f * E.x + 0.7152f * E.y + 0.0722f * E.z; E = P3(l, l, l); }
-        if (p.weaveOn) E = E * ps_exp2(psdv_flicker(frame, p));
+        if (p.weaveOn) E = E * ps_exp2(slot >= -1 && slot <= 1 ? p.flick[slot + 1] : psdv_flicker(frame, p));
         // darkening along the gate edge (light fall-off at the aperture)
         if (gateOn && p.edgeDarkness > 0.0f) {
             float w = ps_max(p.edgeDarkWidth, 0.001f) * gateH;
@@ -568,3 +624,42 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
     }
     return psdv_encode(E, enc);
 }
+
+#if !defined(__METAL_VERSION__)
+// Host side: is the previous (above) / next (below) frame visible on screen?
+// Used to avoid asking the host for t-1 / t+1 when they would not be seen -
+// every extra frame costs the host a full decode + upstream render.
+inline void psdv_neighbors_visible(const PsdvParams& p, bool& above, bool& below)
+{
+    above = below = false;
+    if (!p.gateOn || p.neighbors == 0) return;
+    PsdvFormat g = psdv_format(p.format);
+    float W = (float)p.width, H = (float)p.height;
+    float gateH = g.gateH;
+    float gateW = p.aspect > 0.0f ? g.gateH * p.aspect : g.gateW;
+    float pitch = ps_max(g.pitch + p.frameSpacing * gateH, gateH);
+    float mmPerPx;
+    if (p.gateFraming == 2) mmPerPx = ps_min(gateW / W, gateH / H);
+    else if (p.gateFraming == 1) mmPerPx = ps_max(gateW / W, gateH / H);
+    else mmPerPx = gateH / (ps_max(p.frameSize, 0.05f) * H);
+    mmPerPx = mmPerPx / ps_max(p.zoom, 0.01f);
+    // weave, jitter and the soft gate edge can pull a neighbour in: generous margin
+    float margin = 0.004f * (p.weaveOn ? (p.weaveV + p.scanJitter + 1.0f) : 1.0f) + 0.05f * gateH;
+    float yTop = (0.5f * H - p.posY * H) * mmPerPx + margin;
+    float yBot = (-0.5f * H - p.posY * H) * mmPerPx - margin;
+    // the neighbour picture starts half a pitch away from the centre minus half the gate
+    above = yTop > pitch - 0.5f * gateH;
+    below = yBot < -(pitch - 0.5f * gateH);
+}
+
+// Host side, once per frame: values that depend only on the frame number.
+inline void psdv_prepare(PsdvParams& p)
+{
+    for (int i = 0; i < 3; ++i) {
+        int frame = p.frameIndex - (i - 1);          // index = slot + 1, frame = T - slot
+        ps3 r = psdv_registration(frame, p);
+        p.regX[i] = r.x; p.regY[i] = r.y; p.regR[i] = r.z;
+        p.flick[i] = psdv_flicker(frame, p);
+    }
+}
+#endif

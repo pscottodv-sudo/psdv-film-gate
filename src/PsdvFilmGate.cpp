@@ -22,7 +22,7 @@
     "Grain presets: only Double-X 5222 (RMS 14) and the Ektachrome/E100 preset (RMS 8) use published values; the others are estimates."
 #define kPluginIdentifier "it.psdv.filmgate"
 #define kPluginVersionMajor 1
-#define kPluginVersionMinor 0
+#define kPluginVersionMinor 1
 
 // ------------------------------------------------------------------ parameter names
 // input
@@ -85,6 +85,8 @@
 #define P_HIGH "highlightResponse"
 #define P_COLOR_GRAIN "colorGrain"
 #define P_NEG_GAMMA "negativeGamma"
+#define P_GRAIN_SOFT "grainSoftness"
+#define P_GRAIN_CLUMP "grainClumping"
 #define P_GRAIN_SEED "grainSeed"
 // leaks
 #define P_LEAK_ON "leakEnable"
@@ -103,7 +105,7 @@
 static const char* kGateSectionParams[] = {P_FORMAT, P_FRAMING, P_FRAME_SIZE, P_NEIGHBORS, P_SPACING, P_PERF_ON, P_PERF_STYLE,
                                            P_EDGE_SOFT, P_EDGE_DARK, P_EDGE_DARK_W, P_CORNER, P_DUST, P_FIBRES, P_GATE_HAIR, P_SCRATCHES};
 static const char* kWeaveSectionParams[] = {P_WEAVE_H, P_WEAVE_V, P_WEAVE_RANDOM, P_WEAVE_CYCLE, P_ROTATION, P_SCAN_JITTER, P_FLICKER, P_FLICKER_RANDOM};
-static const char* kGrainSectionParams[] = {P_EMULSION, P_RMS, P_GRAIN_SIZE, P_COLOR_GRAIN, P_NEG_GAMMA, P_SHADOW, P_MID, P_HIGH};
+static const char* kGrainSectionParams[] = {P_EMULSION, P_RMS, P_GRAIN_SIZE, P_COLOR_GRAIN, P_NEG_GAMMA, P_GRAIN_SOFT, P_GRAIN_CLUMP, P_SHADOW, P_MID, P_HIGH};
 static const char* kLeakSectionParams[] = {P_LEAK_OPACITY, P_LEAK_BLEND, P_LEAK_COLOR, P_LEAK_FREQ, P_LEAK_SPREAD, P_PERF_GLOW, P_EDGE_GLOW, P_FLARES, P_BURN};
 
 static bool inList(const std::string& n, const char* const* list, size_t count)
@@ -242,6 +244,8 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
     p.highlightResponse = (float)dbl(P_HIGH, t);
     p.colorGrain = (float)dbl(P_COLOR_GRAIN, t);
     p.negGamma = (float)dbl(P_NEG_GAMMA, t);
+    p.grainSoftness = (float)dbl(P_GRAIN_SOFT, t);
+    p.grainClumping = (float)dbl(P_GRAIN_CLUMP, t);
     p.grainSeed = integer(P_GRAIN_SEED, t);
     // leaks
     p.leakOn = boolean(P_LEAK_ON, t);
@@ -262,9 +266,19 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
 void PsdvFilmGate::getFramesNeeded(const OFX::FramesNeededArguments& args, OFX::FramesNeededSetter& frames)
 {
     OfxRangeD r;
-    bool real = choice(P_NEIGHBORS, args.time) == 1 && boolean(P_GATE_ON, args.time);
-    r.min = real ? args.time - 1.0 : args.time;
-    r.max = real ? args.time + 1.0 : args.time;
+    r.min = r.max = args.time;
+    if (choice(P_NEIGHBORS, args.time) == 1 && boolean(P_GATE_ON, args.time)) {
+        OfxRectD rod = srcClip_->getRegionOfDefinition(args.time);
+        int w = (int)(rod.x2 - rod.x1), h = (int)(rod.y2 - rod.y1);
+        bool above = true, below = true;
+        if (w > 0 && h > 0) {
+            PsdvParams p;
+            fillParams(p, args.time, w, h, 1.0);
+            psdv_neighbors_visible(p, above, below);
+        }
+        if (above) r.min = args.time - 1.0;
+        if (below) r.max = args.time + 1.0;
+    }
     frames.setFramesNeeded(*srcClip_, r);
 }
 
@@ -280,12 +294,15 @@ void PsdvFilmGate::render(const OFX::RenderArguments& args)
     const OfxRectI& db = dst->getBounds();
     PsdvParams p;
     fillParams(p, args.time, db.x2 - db.x1, db.y2 - db.y1, args.renderScale.x);
+    psdv_prepare(p);
 
     std::unique_ptr<OFX::Image> prev, next;
     if (p.gateOn && p.neighbors == 1) {
+        bool above = true, below = true;
+        psdv_neighbors_visible(p, above, below);      // only fetch what is on screen
         OfxRangeD range = srcClip_->getFrameRange();
-        if (args.time - 1.0 >= range.min - 1e-6) prev.reset(srcClip_->fetchImage(args.time - 1.0));
-        if (args.time + 1.0 <= range.max + 1e-6) next.reset(srcClip_->fetchImage(args.time + 1.0));
+        if (above && args.time - 1.0 >= range.min - 1e-6) prev.reset(srcClip_->fetchImage(args.time - 1.0));
+        if (below && args.time + 1.0 <= range.max + 1e-6) next.reset(srcClip_->fetchImage(args.time + 1.0));
         // neighbours must match the current frame geometry, otherwise they are not used
         if (prev.get()) { const OfxRectI& b = prev->getBounds(); if (b.x2 - b.x1 != p.width || b.y2 - b.y1 != p.height) prev.reset(); }
         if (next.get()) { const OfxRectI& b = next->getBounds(); if (b.x2 - b.x1 != p.width || b.y2 - b.y1 != p.height) next.reset(); }
@@ -346,6 +363,7 @@ void PsdvFilmGate::changedParam(const OFX::InstanceChangedArgs& args, const std:
             const PsdvGrainPreset& q = kGrainPresets[i];
             setC(P_EMULSION, q.emulsion); setD(P_RMS, q.rms); setD(P_GRAIN_SIZE, q.size);
             setD(P_COLOR_GRAIN, q.colorGrain); setD(P_NEG_GAMMA, q.negGamma);
+            setD(P_GRAIN_SOFT, q.softness); setD(P_GRAIN_CLUMP, q.clumping);
             setD(P_SHADOW, q.shadow); setD(P_MID, q.mid); setD(P_HIGH, q.highlight);
         }
     } else if (name == P_LEAK_PRESET) {
@@ -507,8 +525,10 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     dparam(desc, page, gG, P_IMAGE_ZOOM, "Image Zoom", "Zooms the clip inside the gate.", 1.0, 0.1, 8.0, 0.25, 4.0);
     dparam(desc, page, gG, P_PAN_X, "Image Pan X", "Moves the clip inside the gate.", 0.0, -1.0, 1.0, -0.5, 0.5);
     dparam(desc, page, gG, P_PAN_Y, "Image Pan Y", "Moves the clip inside the gate.", 0.0, -1.0, 1.0, -0.5, 0.5);
-    static const char* nb[] = {"Off (black)", "Real Previous / Next Frames", "Repeat Current Frame"};
-    cparam(desc, page, gG, P_NEIGHBORS, "Frames Above / Below", "Real uses the actual previous and next frames of the clip.", nb, 3, 1);
+    static const char* nb[] = {"Off (black)", "Real Previous / Next Frames (slower)", "Repeat Current Frame (fast)"};
+    cparam(desc, page, gG, P_NEIGHBORS, "Frames Above / Below",
+           "Repeat is real-time friendly. Real asks Resolve for the previous and next frames too: up to 3x the decoding and upstream "
+           "work, use it for the final render. Frames that are off screen are never requested.", nb, 3, 2);
     dparam(desc, page, gG, P_SPACING, "Frame Spacing", "Extra distance between frames, as a fraction of the gate height. 0 = real gauge pitch.", 0.12, -0.2, 2.0, 0.0, 1.0);
     dparam(desc, page, gG, P_EDGE_SOFT, "Gate Edge Softness", "Blur of the gate edge (out-of-focus aperture shadow).", 1.6, 0.0, 30.0, 0.0, 8.0);
     dparam(desc, page, gG, P_EDGE_DARK, "Gate Edge Darkness", "Light fall-off of the picture along the gate edge.", 0.35, 0.0, 1.0, 0.0, 1.0);
@@ -561,6 +581,8 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     dparam(desc, page, gR, P_MID, "Midtone Response", "Grain multiplier in the midtones.", 1.0, 0.0, 10.0, 0.0, 3.0);
     dparam(desc, page, gR, P_HIGH, "Highlight Response", "Grain multiplier in the highlights.", 1.0, 0.0, 10.0, 0.0, 3.0);
     dparam(desc, page, gR, P_COLOR_GRAIN, "Colour Grain", "Independence of the three dye layers: 0 = monochrome grain, 1 = fully independent.", 0.85, 0.0, 1.0, 0.0, 1.0);
+    dparam(desc, page, gR, P_GRAIN_CLUMP, "Grain Clumping", "How much of the grain sits in large clumps: low = fine even texture, high = coarse organic clumps.", 0.40, 0.0, 1.0, 0.0, 1.0);
+    dparam(desc, page, gR, P_GRAIN_SOFT, "Grain Softness", "Scanner / print softness of the grain. 0 = razor sharp (digital looking), 1 = typical film scan.", 1.0, 0.0, 5.0, 0.0, 3.0);
     dparam(desc, page, gR, P_NEG_GAMMA, "Negative Gamma", "Contrast of the negative characteristic curve (negative emulsions only).", 0.60, 0.2, 1.5, 0.4, 1.0);
     iparam(desc, page, gR, P_GRAIN_SEED, "Grain Seed", "Changes the grain pattern.", 0, 0, 100000);
 

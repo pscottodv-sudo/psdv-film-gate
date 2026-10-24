@@ -1,4 +1,4 @@
-# psdv-film gate emulation 1.0
+# psdv-film gate emulation 1.1
 
 Plugin **OpenFX** per **DaVinci Resolve su macOS** (rendering **Metal**, bundle universale Apple Silicon + Intel) che emula la finestra di ripresa di una cinepresa: gate e perforazioni, gate weave, grana di emulsione e light leaks. Ogni sezione si attiva da sola, ha i suoi preset e un controllo manuale completo. L'interfaccia è in inglese.
 
@@ -102,7 +102,7 @@ Ogni sezione ha **Enable**, un menu **Preset** e i controlli manuali. Scegliere 
 | Frame Size, Zoom, Position X/Y, Centre On | dimensione e posizione del gate |
 | Gate Aspect Ratio, Custom Aspect Ratio | finestra nativa oppure 4:3, 1.37, 1.66, 16:9, 1.85, 2.39, personalizzata |
 | Image In Gate, Image Zoom, Image Pan X/Y | posizione e zoom del video dentro la finestra |
-| Frames Above / Below, Frame Spacing | fotogrammi vicini veri / ripetuti / neri e distanza tra fotogrammi |
+| Frames Above / Below, Frame Spacing | fotogrammi vicini ripetuti (default, veloce) / veri (più lento: Resolve decodifica 3 frame) / neri, e distanza tra fotogrammi |
 | Gate Edge Softness / Darkness / Darkness Width, Corner Roundness, Optical Softness | bordo della finestra e morbidezza ottica |
 | Show Perforations, Perforation Style / Side / Size / Opacity | fori scuri, retroilluminati o solo contorno |
 | Dust, Fibres & Hairs, Hair In Gate, Scratches, Dirt Polarity | sporco legato alla pellicola, pelo fermo nel gate, righe |
@@ -116,7 +116,7 @@ Le ampiezze sono in µm sulla pellicola, quindi lo stesso valore muove più pixe
 
 ### Film Grain
 Preset: Vision3 50D / 250D / 200T / 500T, **Double-X 5222 (RMS 14, dato pubblicato)**, Tri-X 7266, Ektachrome 100D (RMS 8 di E100).
-Controlli: *Emulsion Type*, *RMS Granularity* (valore del datasheet Kodak a D 1.0, apertura 48 µm), *Grain Intensity*, *Grain Size*, *Shadow / Midtone / Highlight Response*, *Colour Grain*, *Negative Gamma*, *Grain Seed*.
+Controlli: *Emulsion Type*, *RMS Granularity* (valore del datasheet Kodak a D 1.0, apertura 48 µm), *Grain Intensity*, *Grain Size*, *Grain Clumping* (fine e uniforme ↔ ammassi organici), *Grain Softness* (morbidezza di scanner/stampa), *Shadow / Midtone / Highlight Response*, *Colour Grain*, *Negative Gamma*, *Grain Seed*.
 La grana è legata alla pellicola in mm. Un Super 8 mostra quindi più grana di un 35mm con lo stesso stock, e il fotogramma sopra ha la stessa grana che aveva quando era al centro.
 
 ### Light Leaks
