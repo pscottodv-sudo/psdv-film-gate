@@ -264,8 +264,8 @@ PS_INLINE ps3 psdv_grain(ps3 E, float fx, float fy, int frame, float mmPerPx, PS
         ps2 cv = psdv_curve(xl, reversal, p.negGamma);
         float o = psdv_occ(cv.x);
         ps3 oc = P3(o, o, o);
-        ps3 half = P3(0.5f, 0.5f, 0.5f);
-        float n = k1 * psdv_clouds(fx / c1, fy / c1, seed, half).x + k2 * psdv_clouds(fx / c2 + 0.371f, fy / c2 + 0.713f, seed + 1, half).x
+        ps3 dense = P3(0.5f, 0.5f, 0.5f);
+        float n = k1 * psdv_clouds(fx / c1, fy / c1, seed, dense).x + k2 * psdv_clouds(fx / c2 + 0.371f, fy / c2 + 0.713f, seed + 1, dense).x
                 + k3 * psdv_clouds(fx / c3 + 0.193f, fy / c3 + 0.557f, seed + 2, oc).x;
         float v = sgn * sigRef * trim * psdv_gshape(cv.x) * n / ps_max(cv.y, gfloor);
         dx = P3(v, v, v);
@@ -274,9 +274,9 @@ PS_INLINE ps3 psdv_grain(ps3 E, float fx, float fy, int frame, float mmPerPx, PS
         ps2 cg = psdv_curve(ps_log10(Ef.y / 0.18f), reversal, p.negGamma);
         ps2 cb = psdv_curve(ps_log10(Ef.z / 0.18f), reversal, p.negGamma);
         ps3 oc = P3(psdv_occ(cr.x), psdv_occ(cg.x), psdv_occ(cb.x));
-        ps3 half = P3(0.5f, 0.5f, 0.5f);   // dye clouds and groups: dense, symmetric
-        ps3 n1 = psdv_clouds(fx / c1, fy / c1, seed, half);
-        ps3 n2 = psdv_clouds(fx / c2 + 0.371f, fy / c2 + 0.713f, seed + 1, half);
+        ps3 dense = P3(0.5f, 0.5f, 0.5f);   // dye clouds and groups: dense, symmetric
+        ps3 n1 = psdv_clouds(fx / c1, fy / c1, seed, dense);
+        ps3 n2 = psdv_clouds(fx / c2 + 0.371f, fy / c2 + 0.713f, seed + 1, dense);
         ps3 n3 = psdv_clouds(fx / c3 + 0.193f, fy / c3 + 0.557f, seed + 2, oc);
         // The finest scale is shared by the three layers: at the scale of a pixel the
         // scanner and the overlap of the dye spectra leave mostly luminance texture,

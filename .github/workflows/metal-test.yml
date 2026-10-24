@@ -72,7 +72,7 @@ jobs:
           hostbuild/psdv_ofx_host --size 960 540 --range 0 47 --frames 0,24,47 --out out/host | tee out/ofx_host_render.txt
 
       - name: Build .pkg installer
-        if: always() && matrix.os == 'macos-15'
+        if: success() && matrix.os == 'macos-15'
         run: |
           ./scripts/make_installer_macos.sh
           pkgutil --payload-files dist/*.pkg | head
