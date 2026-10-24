@@ -2,6 +2,7 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #include <chrono>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include "gpu_backend.h"
@@ -10,12 +11,14 @@
 bool PsdvRunMetal(void* cmdQueue, const PsdvParams& p, const void* prev, const void* cur, const void* next, void* dst);
 bool PsdvMetalPrepare(void* device);
 const char* PsdvMetalLastError();
+void PsdvMetalSetFastMath(bool on);
 
 static id<MTLDevice> gDevice;
 static id<MTLCommandQueue> gQueue;
 
 bool gpuInit(std::string& name, std::string& error)
 {
+    if (getenv("PSDV_FAST_MATH") && getenv("PSDV_FAST_MATH")[0] == '0') PsdvMetalSetFastMath(false);
     gDevice = MTLCreateSystemDefaultDevice();
     if (!gDevice) { error = "MTLCreateSystemDefaultDevice returned nil (no Metal device on this machine)"; return false; }
     gQueue = [gDevice newCommandQueue];

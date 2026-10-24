@@ -47,6 +47,10 @@ jobs:
             echo "::warning::This runner exposes no Metal device - GPU comparison skipped (offline compile still runs)"
             exit 0
           fi
+          echo "--- same cases without fast math (precision reference)"
+          mkdir -p out/precise
+          PSDV_FAST_MATH=0 build/psdv_gpu_compare out/precise > out/console_precise.txt 2>&1 || true
+          tail -32 out/console_precise.txt
           exit $rc
 
       - name: Offline Metal compile (xcrun metal)
@@ -88,7 +92,7 @@ jobs:
           R=$(mktemp -d)
           mkdir -p "$R/out"
           cp out/*.md out/*.txt out/*.json "$R/out/" 2>/dev/null || true
-          cp out/defaults_super8_edge_leaks_*.png out/all_sections_off_identity_*.png "$R/out/" 2>/dev/null || true
+          cp out/defaults_super8_edge_leaks_*.png out/all_sections_off_identity_*.png out/extremes_*.png out/format_7_*.png "$R/out/" 2>/dev/null || true
           ls dist > "$R/out/dist_files.txt" 2>/dev/null || true
           mkdir -p "$R/dist"; cp dist/*.pkg dist/*.sha256 "$R/dist/" 2>/dev/null || true
           cp build.log "$R/" 2>/dev/null || true

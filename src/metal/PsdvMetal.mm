@@ -13,6 +13,7 @@ namespace {
 std::mutex gMutex;
 std::unordered_map<void*, id<MTLComputePipelineState>> gPipelines;   // one per device
 std::string gLastError;
+bool gFastMath = true;
 
 void logError(const std::string& msg)
 {
@@ -39,7 +40,7 @@ id<MTLComputePipelineState> pipelineFor(id<MTLDevice> device)
     MTLCompileOptions* opt = [MTLCompileOptions new];
     // Fast math: the hashes are integer, so the grain pattern is unaffected; the
     // transcendental functions become much cheaper (GPU vs CPU checked in CI).
-    opt.fastMathEnabled = YES;
+    opt.fastMathEnabled = gFastMath ? YES : NO;
     id<MTLLibrary> lib = [device newLibraryWithSource:[NSString stringWithUTF8String:kPsdvKernelSource] options:opt error:&err];
     if (!lib) {
         logError(std::string("Metal compile failed: ") + (err ? err.localizedDescription.UTF8String : "unknown"));
@@ -56,6 +57,13 @@ id<MTLComputePipelineState> pipelineFor(id<MTLDevice> device)
     return ps;
 }
 } // namespace
+
+// Test hook: compile with or without fast math (clears the pipeline cache).
+void PsdvMetalSetFastMath(bool on)
+{
+    std::lock_guard<std::mutex> lock(gMutex);
+    if (gFastMath != on) { gFastMath = on; gPipelines.clear(); }
+}
 
 // Compiles the kernel for a device ahead of the first render (used by the tests).
 bool PsdvMetalPrepare(void* device)
