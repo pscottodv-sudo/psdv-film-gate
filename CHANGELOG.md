@@ -8,4 +8,6 @@
   - **Film Grain**: modello a nuvole di colorante calibrato sull'RMS a 48 µm; preset Vision3, Double-X 5222 (RMS 14 pubblicato), Tri-X, Ektachrome; risposta per zone, grana colore, gamma del negativo.
   - **Light Leaks**: alone sulle perforazioni e sul bordo del gate, flare laterali, bruciature organiche; Opacity, Blend Mode, Colour Tint, Frequency, Size; preset Edge Leaks / Warm Flares / Organic Burn / Subtle Glow.
 - Installer macOS (.pkg), script di build, installazione e disinstallazione, modello di workflow GitHub Actions.
+- **Enable Film Gate** spento disattiva anche polvere, fibre, pelo nel gate, righe e morbidezza ottica: l'immagine esce identica all'ingresso.
+- Test GPU contro CPU (`tests/metal/`) e workflow `metal-test` che lo esegue sui Mac di GitHub.
 - Correzioni durante lo sviluppo: con il gate spento l'immagine era ritagliata nel formato del gate (ora 1:1 a schermo); i Warm Flares riempivano lo sfondo fuori dal gate e avevano una giuntura al centro (ora sfumano sul bordo e i due lati sono indipendenti).

@@ -2,7 +2,7 @@
 
 Plugin **OpenFX** per **DaVinci Resolve su macOS** (rendering **Metal**, bundle universale Apple Silicon + Intel) che emula la finestra di ripresa di una cinepresa: gate e perforazioni, gate weave, grana di emulsione e light leaks. Ogni sezione si attiva da sola, ha i suoi preset e un controllo manuale completo. L'interfaccia è in inglese.
 
-> **Stato della verifica:** il plugin è stato compilato e provato su Linux (CPU) dentro un host OpenFX reale. **Non è stato caricato in DaVinci Resolve e il kernel Metal non è stato compilato su un Mac**, perché qui non c'è macOS. Il primo build sul Mac è quindi anche il primo test Metal. Dettagli in [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
+> **Stato della verifica:** build universale, compilazione Metal (offline e a runtime) e render Metal sono verificati su Mac Apple Silicon di GitHub (macOS 15): **29/29 casi GPU identici alla CPU** (errore massimo 2·10⁻⁵). **Non è ancora stato provato dentro DaVinci Resolve.** Dettagli in [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
 
 ---
 

@@ -12,7 +12,7 @@ jobs:
     env:
       HAS_CERTS: ${{ secrets.MACOS_CERTS_P12 != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Import signing certificates (optional)
         if: env.HAS_CERTS == 'true'
         env:
@@ -34,7 +34,7 @@ jobs:
           CODESIGN_IDENTITY: ${{ secrets.CODESIGN_IDENTITY }}
           INSTALLER_IDENTITY: ${{ secrets.INSTALLER_IDENTITY }}
         run: ./scripts/make_installer_macos.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: psdv-film-gate-macos
           path: dist/*

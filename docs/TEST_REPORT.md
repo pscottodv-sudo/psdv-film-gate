@@ -24,13 +24,27 @@ Ambiente di test: Linux x86-64, g++ 13 / clang 18, CMake 3.28, OpenFX SDK commit
 | Kernel Metal incluso: controllo **sintattico** con clang e una `metal_stdlib` simulata | OK - **non è una compilazione Metal reale** |
 | Script shell (`bash -n`), YAML del workflow | sintassi OK |
 
-## Non eseguiti (impossibili qui) - da fare sul Mac
+## Superati su Mac (GitHub Actions, workflow `metal-test`)
 
-1. `./scripts/build_macos.sh`: build universale, link dei framework Metal e Foundation, firma ad-hoc.
-2. **Compilazione Metal reale** del kernel (avviene al primo render dentro Resolve). Errori in `~/Library/Logs/psdv-film-gate.log`.
-3. Caricamento in **DaVinci Resolve**, comparsa in OpenFX › PSDV, comportamento dell'interfaccia (gruppi, preset, sincronizzazione con Custom).
-4. Accesso temporale (t±1) **insieme al render Metal** dentro Resolve.
-5. Corrispondenza visiva CPU contro GPU e prestazioni GPU a 4K.
-6. `make_installer_macos.sh`: pkgbuild/productbuild, installazione con Installer.app, firma e notarizzazione.
+Run del 24-10-2026 su runner Apple Silicon. Risultati completi nel branch `ci-results/macos-15` (`out/report.md`).
+
+| Test | macOS 14 | macOS 15 |
+|---|---|---|
+| Build universale arm64 + x86_64, link Metal/Foundation, entry point OFX, firma ad-hoc | OK | OK |
+| Compilazione **offline** del kernel con `xcrun metal` (+ `metallib`) | OK, 0 warning | OK, 0 warning |
+| Compilazione **a runtime** con il codice del plugin (`newLibraryWithSource`, la stessa via di Resolve) | - (il runner non ha GPU Metal) | OK, 1.6 s al primo uso |
+| Render Metal tramite `PsdvRunMetal` confrontato con la CPU, 29 casi (9 formati, 4 emulsioni, leaks, perforazioni, zoom/pan, estremi, verticale, 4K, 1001×777) | - | **29/29**, errore max 2.3·10⁻⁵, medio ~10⁻⁸, nessun NaN |
+| Identità con tutte le sezioni spente (GPU contro ingresso) | - | errore max 5.5·10⁻⁶ |
+| Caricamento del binario Mac in un host OFX + render CPU con t±1 | OK | OK |
+| Creazione del `.pkg` (pkgbuild + productbuild) | - | OK |
+
+Tempi sulla GPU virtualizzata del runner ("Apple Paravirtual device", molto più lenta di un Mac reale): 1080p circa 35 ms/frame, 4K circa 140 ms/frame. CPU dello stesso runner: circa 0.7 s e 3 s.
+
+## Non ancora eseguiti - da fare sul tuo Mac
+
+1. Caricamento in **DaVinci Resolve**, comparsa in OpenFX › PSDV, comportamento dell'interfaccia (gruppi, preset, sincronizzazione con Custom).
+2. Accesso temporale (t±1) **insieme al render Metal** dentro Resolve, e formato dei buffer che Resolve passa al plugin.
+3. Prestazioni su una GPU Apple reale.
+4. Installazione del `.pkg` con Installer.app; firma e notarizzazione (servono certificati Apple Developer).
 
 Prova consigliata dopo l'installazione: una clip Super 8 a 1080p, con il plugin con i default. Devi vedere il look di riferimento: foro scuro con bordo arancio e fotogrammi vicini sopra e sotto. Poi spegni le 4 sezioni: l'immagine deve risultare identica all'originale.
