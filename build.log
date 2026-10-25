@@ -1,0 +1,21 @@
+[  5%] Embedding Metal kernel source
+[ 16%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsImageEffect.cpp.o
+[ 16%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsCore.cpp.o
+[ 22%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsInteract.cpp.o
+[ 27%] Building CXX object CMakeFiles/psdv_gpu_compare.dir/tests/metal/gpu_compare.cpp.o
+[ 33%] Building OBJCXX object CMakeFiles/psdv_gpu_compare.dir/tests/metal/gpu_backend_metal.mm.o
+[ 38%] Building OBJCXX object CMakeFiles/psdv_gpu_compare.dir/src/metal/PsdvMetal.mm.o
+[ 44%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsLog.cpp.o
+[ 50%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsMultiThread.cpp.o
+[ 55%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsParams.cpp.o
+[ 61%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsProperty.cpp.o
+[ 66%] Linking CXX executable psdv_gpu_compare
+[ 66%] Built target psdv_gpu_compare
+[ 72%] Building CXX object CMakeFiles/ofxsupport.dir/_deps/openfx-src/Support/Library/ofxsPropertyValidation.cpp.o
+[ 77%] Linking CXX static library libofxsupport.a
+[ 77%] Built target ofxsupport
+[ 88%] Building OBJCXX object CMakeFiles/psdv-film-gate.dir/src/metal/PsdvMetal.mm.o
+[ 88%] Building CXX object CMakeFiles/psdv-film-gate.dir/src/PsdvFilmGate.cpp.o
+[ 94%] Linking CXX shared module psdv-film-gate.ofx
+Assembling psdv-film-gate.ofx.bundle
+[100%] Built target psdv-film-gate

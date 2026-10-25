@@ -1,0 +1,33 @@
+GPU device: Apple Paravirtual device
+Kernel compiled at runtime in 945 ms
+defaults_super8_edge_leaks     1920x1080 max 2.38e-02 mean 1.84e-07 >0.01 1 nonfinite 0 gpu 9.0 ms cpu 344 ms PASS
+  identity vs input: max abs 2.27e-05
+all_sections_off_identity      1920x1080 max 2.26e-05 mean 1.57e-07 >0.01 0 nonfinite 0 gpu 2.2 ms cpu 56 ms PASS
+format_0                       1920x1080 max 2.20e-05 mean 1.39e-07 >0.01 0 nonfinite 0 gpu 9.2 ms cpu 330 ms PASS
+format_1                       1920x1080 max 2.38e-02 mean 1.84e-07 >0.01 1 nonfinite 0 gpu 9.5 ms cpu 328 ms PASS
+format_2                       1920x1080 max 2.08e-04 mean 3.29e-07 >0.01 0 nonfinite 0 gpu 8.4 ms cpu 343 ms PASS
+format_3                       1920x1080 max 2.01e-04 mean 5.51e-07 >0.01 0 nonfinite 0 gpu 9.0 ms cpu 349 ms PASS
+format_4                       1920x1080 max 3.68e-05 mean 2.87e-07 >0.01 0 nonfinite 0 gpu 8.1 ms cpu 293 ms PASS
+format_5                       1920x1080 max 1.45e-03 mean 3.90e-07 >0.01 0 nonfinite 0 gpu 8.3 ms cpu 300 ms PASS
+format_6                       1920x1080 max 5.99e-05 mean 4.54e-07 >0.01 0 nonfinite 0 gpu 9.2 ms cpu 367 ms PASS
+format_7                       1920x1080 max 5.16e-05 mean 6.54e-07 >0.01 0 nonfinite 0 gpu 10.8 ms cpu 465 ms PASS
+format_8                       1920x1080 max 8.53e-04 mean 8.00e-07 >0.01 0 nonfinite 0 gpu 10.3 ms cpu 454 ms PASS
+grain_emulsion_0               1920x1080 max 2.63e-02 mean 1.81e-07 >0.01 1 nonfinite 0 gpu 9.5 ms cpu 355 ms PASS
+grain_emulsion_1               1920x1080 max 2.38e-02 mean 1.84e-07 >0.01 1 nonfinite 0 gpu 9.1 ms cpu 356 ms PASS
+grain_emulsion_2               1920x1080 max 6.79e-03 mean 2.29e-07 >0.01 0 nonfinite 0 gpu 8.6 ms cpu 335 ms PASS
+grain_emulsion_3               1920x1080 max 8.81e-03 mean 2.27e-07 >0.01 0 nonfinite 0 gpu 8.5 ms cpu 409 ms PASS
+perf_light_hot_white           1920x1080 max 2.38e-02 mean 1.84e-07 >0.01 1 nonfinite 0 gpu 9.0 ms cpu 373 ms PASS
+perf_light_unstable            1920x1080 max 1.29e-04 mean 1.53e-07 >0.01 0 nonfinite 0 gpu 9.0 ms cpu 368 ms PASS
+perf_light_16mm_both           1920x1080 max 2.08e-04 mean 3.29e-07 >0.01 0 nonfinite 0 gpu 7.7 ms cpu 322 ms PASS
+perforations_backlit_both      1920x1080 max 2.08e-04 mean 3.29e-07 >0.01 0 nonfinite 0 gpu 7.9 ms cpu 311 ms PASS
+perforations_outline           1920x1080 max 2.38e-02 mean 1.84e-07 >0.01 1 nonfinite 0 gpu 9.1 ms cpu 364 ms PASS
+picture_only_fit               1920x1080 max 2.92e-04 mean 4.18e-07 >0.01 0 nonfinite 0 gpu 10.2 ms cpu 356 ms PASS
+gate_off_with_grain_weave      1920x1080 max 4.52e-05 mean 9.00e-07 >0.01 0 nonfinite 0 gpu 6.6 ms cpu 298 ms PASS
+image_zoom_pan                 1920x1080 max 3.08e-02 mean 2.72e-07 >0.01 1 nonfinite 0 gpu 9.0 ms cpu 340 ms PASS
+strong_weave_rotation          1920x1080 max 3.90e-02 mean 2.74e-07 >0.01 1 nonfinite 0 gpu 9.8 ms cpu 345 ms PASS
+dirt_heavy                     1920x1080 max 2.38e-02 mean 1.88e-07 >0.01 1 nonfinite 0 gpu 9.8 ms cpu 374 ms PASS
+extremes                       1920x1080 max 5.56e-03 mean 1.66e-03 >0.01 0 nonfinite 0 gpu 15.5 ms cpu 545 ms PASS
+vertical_1080x1920             1080x1920 max 1.45e-05 mean 3.02e-07 >0.01 0 nonfinite 0 gpu 13.0 ms cpu 550 ms PASS
+uhd_3840x2160                  3840x2160 max 1.50e-02 mean 3.49e-07 >0.01 1 nonfinite 0 gpu 34.7 ms cpu 1610 ms PASS
+odd_size_1001x777              1001x777  max 1.91e-05 mean 2.86e-07 >0.01 0 nonfinite 0 gpu 4.6 ms cpu 185 ms PASS
+29 / 29 cases passed

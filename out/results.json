@@ -1,0 +1,31 @@
+{"device": "Apple Paravirtual device", "compile_ms": 944.7, "cases": [
+{"case": "defaults_super8_edge_leaks", "w": 1920, "h": 1080, "max_abs": 0.0238046, "mean_abs": 1.84049e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.03, "cpu_ms": 343.6, "identity_abs": 0, "pass": true}
+,{"case": "all_sections_off_identity", "w": 1920, "h": 1080, "max_abs": 2.26498e-05, "mean_abs": 1.57211e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 2.18, "cpu_ms": 56.0, "identity_abs": 2.27094e-05, "pass": true}
+,{"case": "format_0", "w": 1920, "h": 1080, "max_abs": 2.2003e-05, "mean_abs": 1.38599e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 9.17, "cpu_ms": 330.1, "identity_abs": 0, "pass": true}
+,{"case": "format_1", "w": 1920, "h": 1080, "max_abs": 0.0238046, "mean_abs": 1.84049e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.50, "cpu_ms": 328.3, "identity_abs": 0, "pass": true}
+,{"case": "format_2", "w": 1920, "h": 1080, "max_abs": 0.000208475, "mean_abs": 3.28894e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 8.41, "cpu_ms": 343.2, "identity_abs": 0, "pass": true}
+,{"case": "format_3", "w": 1920, "h": 1080, "max_abs": 0.000201076, "mean_abs": 5.5128e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 8.95, "cpu_ms": 349.1, "identity_abs": 0, "pass": true}
+,{"case": "format_4", "w": 1920, "h": 1080, "max_abs": 3.67761e-05, "mean_abs": 2.86746e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 8.11, "cpu_ms": 293.3, "identity_abs": 0, "pass": true}
+,{"case": "format_5", "w": 1920, "h": 1080, "max_abs": 0.00145348, "mean_abs": 3.89505e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 8.30, "cpu_ms": 299.7, "identity_abs": 0, "pass": true}
+,{"case": "format_6", "w": 1920, "h": 1080, "max_abs": 5.9865e-05, "mean_abs": 4.53517e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 9.25, "cpu_ms": 367.2, "identity_abs": 0, "pass": true}
+,{"case": "format_7", "w": 1920, "h": 1080, "max_abs": 5.16176e-05, "mean_abs": 6.53704e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 10.83, "cpu_ms": 465.1, "identity_abs": 0, "pass": true}
+,{"case": "format_8", "w": 1920, "h": 1080, "max_abs": 0.00085336, "mean_abs": 8.00107e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 10.34, "cpu_ms": 453.9, "identity_abs": 0, "pass": true}
+,{"case": "grain_emulsion_0", "w": 1920, "h": 1080, "max_abs": 0.0262924, "mean_abs": 1.81422e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.54, "cpu_ms": 354.7, "identity_abs": 0, "pass": true}
+,{"case": "grain_emulsion_1", "w": 1920, "h": 1080, "max_abs": 0.0238046, "mean_abs": 1.84049e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.07, "cpu_ms": 355.7, "identity_abs": 0, "pass": true}
+,{"case": "grain_emulsion_2", "w": 1920, "h": 1080, "max_abs": 0.00678607, "mean_abs": 2.29231e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 8.58, "cpu_ms": 334.7, "identity_abs": 0, "pass": true}
+,{"case": "grain_emulsion_3", "w": 1920, "h": 1080, "max_abs": 0.00881188, "mean_abs": 2.27137e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 8.50, "cpu_ms": 408.9, "identity_abs": 0, "pass": true}
+,{"case": "perf_light_hot_white", "w": 1920, "h": 1080, "max_abs": 0.0238046, "mean_abs": 1.83658e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 8.99, "cpu_ms": 372.7, "identity_abs": 0, "pass": true}
+,{"case": "perf_light_unstable", "w": 1920, "h": 1080, "max_abs": 0.000129387, "mean_abs": 1.53096e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 8.97, "cpu_ms": 367.8, "identity_abs": 0, "pass": true}
+,{"case": "perf_light_16mm_both", "w": 1920, "h": 1080, "max_abs": 0.000208475, "mean_abs": 3.29448e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 7.74, "cpu_ms": 321.6, "identity_abs": 0, "pass": true}
+,{"case": "perforations_backlit_both", "w": 1920, "h": 1080, "max_abs": 0.000208475, "mean_abs": 3.29144e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 7.90, "cpu_ms": 310.9, "identity_abs": 0, "pass": true}
+,{"case": "perforations_outline", "w": 1920, "h": 1080, "max_abs": 0.0238046, "mean_abs": 1.84057e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.08, "cpu_ms": 364.2, "identity_abs": 0, "pass": true}
+,{"case": "picture_only_fit", "w": 1920, "h": 1080, "max_abs": 0.000291735, "mean_abs": 4.18191e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 10.19, "cpu_ms": 355.8, "identity_abs": 0, "pass": true}
+,{"case": "gate_off_with_grain_weave", "w": 1920, "h": 1080, "max_abs": 4.51803e-05, "mean_abs": 9.0015e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 6.57, "cpu_ms": 298.3, "identity_abs": 0, "pass": true}
+,{"case": "image_zoom_pan", "w": 1920, "h": 1080, "max_abs": 0.0308362, "mean_abs": 2.7232e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.00, "cpu_ms": 339.6, "identity_abs": 0, "pass": true}
+,{"case": "strong_weave_rotation", "w": 1920, "h": 1080, "max_abs": 0.0389569, "mean_abs": 2.73977e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.78, "cpu_ms": 344.9, "identity_abs": 0, "pass": true}
+,{"case": "dirt_heavy", "w": 1920, "h": 1080, "max_abs": 0.0238046, "mean_abs": 1.87758e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 9.85, "cpu_ms": 374.2, "identity_abs": 0, "pass": true}
+,{"case": "extremes", "w": 1920, "h": 1080, "max_abs": 0.00555533, "mean_abs": 0.00166472, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 15.45, "cpu_ms": 544.8, "identity_abs": 0, "pass": true}
+,{"case": "vertical_1080x1920", "w": 1080, "h": 1920, "max_abs": 1.45435e-05, "mean_abs": 3.02475e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 13.04, "cpu_ms": 550.2, "identity_abs": 0, "pass": true}
+,{"case": "uhd_3840x2160", "w": 3840, "h": 2160, "max_abs": 0.01497, "mean_abs": 3.48786e-07, "over_0_01": 1, "nonfinite": 0, "gpu_ms": 34.66, "cpu_ms": 1610.2, "identity_abs": 0, "pass": true}
+,{"case": "odd_size_1001x777", "w": 1001, "h": 777, "max_abs": 1.9148e-05, "mean_abs": 2.8605e-07, "over_0_01": 0, "nonfinite": 0, "gpu_ms": 4.64, "cpu_ms": 184.9, "identity_abs": 0, "pass": true}
+], "failed": 0}

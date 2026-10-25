@@ -1,0 +1,89 @@
+plugin: it.psdv.filmgate  version 1.8  grouping: PSDV
+Controls               Page                         parent=           label="Controls"
+grpInput               Group                        parent=           label="Input"
+inputEncoding          Choice                       parent=grpInput   label="Input Encoding" [3 options]
+grpGate                Group                        parent=           label="Film Gate & Perforations"
+gateEnable             Boolean                      parent=grpGate    label="Enable Film Gate"
+gatePreset             Choice                       parent=grpGate    label="Gate Preset" [8 options]
+filmFormat             Choice                       parent=grpGate    label="Film Format" [9 options]
+gateFraming            Choice                       parent=grpGate    label="Gate Framing" [4 options]
+frameSize              Double                       parent=grpGate    label="Frame Size"
+aspectRatio            Choice                       parent=grpGate    label="Gate Aspect Ratio" [8 options]
+customAspect           Double                       parent=grpGate    label="Custom Aspect Ratio"
+zoom                   Double                       parent=grpGate    label="Zoom"
+centreOn               Choice                       parent=grpGate    label="Centre On" [2 options]
+positionX              Double                       parent=grpGate    label="Position X"
+positionY              Double                       parent=grpGate    label="Position Y"
+imageFit               Choice                       parent=grpGate    label="Image In Gate" [2 options]
+imageZoom              Double                       parent=grpGate    label="Image Zoom"
+imagePanX              Double                       parent=grpGate    label="Image Pan X"
+imagePanY              Double                       parent=grpGate    label="Image Pan Y"
+neighborFrames         Choice                       parent=grpGate    label="Frames Above / Below" [3 options]
+frameSpacing           Double                       parent=grpGate    label="Frame Spacing"
+edgeSoftness           Double                       parent=grpGate    label="Gate Edge Softness"
+edgeDarkness           Double                       parent=grpGate    label="Gate Edge Darkness"
+edgeDarkWidth          Double                       parent=grpGate    label="Edge Darkness Width"
+cornerRadius           Double                       parent=grpGate    label="Corner Roundness"
+edgeIrregularity       Double                       parent=grpGate    label="Edge Irregularity (µm)"
+irregularitySize       Double                       parent=grpGate    label="Irregularity Size"
+irregularityMotion     Double                       parent=grpGate    label="Irregularity Motion"
+gateDefocus            Double                       parent=grpGate    label="Gate Defocus"
+opticalSoftness        Double                       parent=grpGate    label="Optical Softness"
+showPerforations       Boolean                      parent=grpGate    label="Show Perforations"
+perforationStyle       Choice                       parent=grpGate    label="Perforation Style" [3 options]
+perforationSide        Choice                       parent=grpGate    label="Perforation Side" [4 options]
+perforationPosition    Choice                       parent=grpGate    label="Perforation Position" [2 options]
+perforationShift       Double                       parent=grpGate    label="Perforation Shift (mm)"
+perforationOpacity     Double                       parent=grpGate    label="Perforation Opacity"
+perforationDefocus     Double                       parent=grpGate    label="Perforation Defocus"
+perforationIrregularity Double                       parent=grpGate    label="Perforation Irregularity (µm)"
+dust                   Double                       parent=grpGate    label="Dust"
+fibres                 Double                       parent=grpGate    label="Fibres & Hairs"
+gateHair               Double                       parent=grpGate    label="Hair In Gate"
+scratches              Double                       parent=grpGate    label="Scratches"
+dirtPolarity           Choice                       parent=grpGate    label="Dirt Polarity" [3 options]
+grpWeave               Group                        parent=           label="Gate Weave, Jitter & Flicker"
+weaveEnable            Boolean                      parent=grpWeave   label="Enable Gate Weave"
+weavePreset            Choice                       parent=grpWeave   label="Weave Preset" [9 options]
+weaveAmount            Double                       parent=grpWeave   label="Weave Amount"
+weaveHorizontal        Double                       parent=grpWeave   label="Horizontal Weave (µm)"
+weaveVertical          Double                       parent=grpWeave   label="Vertical Weave (µm)"
+weaveRandomness        Double                       parent=grpWeave   label="Weave Randomness"
+weaveCycle             Double                       parent=grpWeave   label="Drift Cycle (frames)"
+rotationalWeave        Double                       parent=grpWeave   label="Rotational Weave (°)"
+scannerJitter          Double                       parent=grpWeave   label="Scanner Jitter (µm)"
+exposureFlicker        Double                       parent=grpWeave   label="Exposure Flicker (stops)"
+flickerRandomness      Double                       parent=grpWeave   label="Flicker Randomness"
+weaveSeed              Integer                      parent=grpWeave   label="Weave Seed"
+grpGrain               Group                        parent=           label="Film Grain"
+grainEnable            Boolean                      parent=grpGrain   label="Enable Film Grain"
+grainPreset            Choice                       parent=grpGrain   label="Grain Preset" [8 options]
+emulsionType           Choice                       parent=grpGrain   label="Emulsion Type" [4 options]
+rmsGranularity         Double                       parent=grpGrain   label="RMS Granularity"
+grainIntensity         Double                       parent=grpGrain   label="Grain Intensity"
+grainSize              Double                       parent=grpGrain   label="Grain Size"
+shadowResponse         Double                       parent=grpGrain   label="Shadow Response"
+midtoneResponse        Double                       parent=grpGrain   label="Midtone Response"
+highlightResponse      Double                       parent=grpGrain   label="Highlight Response"
+colorGrain             Double                       parent=grpGrain   label="Colour Grain"
+grainClumping          Double                       parent=grpGrain   label="Grain Clumping"
+grainSoftness          Double                       parent=grpGrain   label="Grain Softness"
+negativeGamma          Double                       parent=grpGrain   label="Negative Gamma"
+grainSeed              Integer                      parent=grpGrain   label="Grain Seed"
+grpLeaks               Group                        parent=           label="Perforation Light"
+perfLightPreset        Choice                       parent=grpLeaks   label="Perforation Light Preset" [9 options]
+perfLightOpacity       Double                       parent=grpLeaks   label="Opacity"
+perfLightExposure      Double                       parent=grpLeaks   label="Exposure (EV)"
+perfLightRimWidth      Double                       parent=grpLeaks   label="Rim Width"
+perfLightGlowSize      Double                       parent=grpLeaks   label="Glow Size"
+perfLightRimColour     RGB                          parent=grpLeaks   label="Rim Colour"
+perfLightGlowColour    RGB                          parent=grpLeaks   label="Glow Colour"
+perfLightCoolBandColour RGB                          parent=grpLeaks   label="Cool Band Colour"
+perfLightSaturation    Double                       parent=grpLeaks   label="Light Saturation"
+perfLightHotCore       Double                       parent=grpLeaks   label="Hot Core"
+perfLightCoolBand      Double                       parent=grpLeaks   label="Cool Band"
+perfLightLean          Double                       parent=grpLeaks   label="Lean"
+perfLightDirection     Double                       parent=grpLeaks   label="Light Direction (°)"
+perfLightVariation     Double                       parent=grpLeaks   label="Variation"
+perfLightVariationSpeed Double                       parent=grpLeaks   label="Variation Speed"
+perfLightSeed          Integer                      parent=grpLeaks   label="Light Seed"
