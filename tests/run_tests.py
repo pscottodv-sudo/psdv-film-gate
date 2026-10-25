@@ -275,12 +275,12 @@ def test_sweep():
             for emu in range(4):
                 for style in range(3):
                     _, nf = render(src, dict(format=fmt, neighbors=nb, emulsion=emu, perfStyle=style, perfSide=(fmt + style) % 4,
-                                             flares=1, burn=1, gateHair=1, leakBlend=(emu + nb) % 4, frameIndex=fmt * 13 + nb))
+                                             perfFringe=1, perfVariation=1, gateHair=1, perfSpeed=((emu + nb) % 4) / 3, frameIndex=fmt * 13 + nb))
                     count += 1; bad += nf != 0
     record("sweep: 9 formats x 3 neighbour modes x 4 emulsions x 3 perforation styles", bad == 0, f"{count} renders, {bad} with NaN/Inf, {time.time()-t0:.0f}s")
     out, nf = render(di_enc(scene(1920, 1080)), dict(rms=60, grainIntensity=20, grainSize=10, shadowResponse=10, weaveH=500, weaveV=500,
-                                                     rotation=5, scanJitter=500, flicker=2, dust=10, fibres=10, scratches=2, leakOpacity=5,
-                                                     perfGlow=10, edgeGlow=10, flares=10, burn=10, zoom=8, imageZoom=8, frameSize=2))
+                                                     rotation=5, scanJitter=500, flicker=2, dust=10, fibres=10, scratches=2, perfLightEV=4,
+                                                     perfRim=10, perfHalo=10, perfAsym=1, zoom=8, imageZoom=8, frameSize=2))
     record("extreme values on every slider", nf == 0, f"nonfinite {nf}, range {out.min():.3f}..{out.max():.3f}")
     for W, H in ((1440, 1080), (3840, 2160), (1080, 1920), (720, 480)):
         _, nf = render(di_enc(scene(W, H)), dict(frameIndex=7))

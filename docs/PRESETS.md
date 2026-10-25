@@ -53,16 +53,20 @@ La geometria viene dalla tabella dei formati in `psdv_core.h` (SMPTE/ISO; valori
 
 I preset di gate (dimensione a schermo, spaziatura, morbidezza del bordo, sporco) sono scelte estetiche **[E]**.
 
-## Light Leaks
+## Perforation Light
 
-Sono un look, non una misura. Tutti i valori sono **[E]**. *Edge Leaks* riproduce il riferimento fornito: foro scuro con bordo arancio luminoso e bordo caldo intorno alla finestra.
+Look, non misura: tutti i valori sono **[E]**, regolati a occhio sul riferimento fornito (scansione negativa con foro nero e bordo bianco-arancio-rosso).
+Ricerca su Dehancer: lo strumento *Overscan* di Dehancer usa texture ricavate da scansioni reali; l'alone sui bordi delle perforazioni è un effetto di halation che dipende dalla retroilluminazione e dall'esposizione della scansione, e si regola con *Exposure* (−2…+2 EV); *Static Gate* OFF fa variare il gate da un fotogramma all'altro. Le texture e il codice di Dehancer sono proprietari: qui il comportamento è ricostruito da zero (profilo del bordo procedurale, variazione nel tempo), non copiato.
 
-| Preset | Opacità | Blend | Tinta RGB | Frequenza | Size | Perf glow | Edge glow | Flares | Burn |
-|---|---|---|---|---|---|---|---|---|---|
-| Edge Leaks | 1.0 | Screen | 1.00 / 0.28 / 0.04 | 0.3 | 1.0 | 0.9 | 0.7 | 0 | 0 |
-| Warm Flares | 1.0 | Screen | 1.00 / 0.38 / 0.08 | 1.0 | 2.0 | 0.3 | 0.3 | 0.8 | 0 |
-| Organic Burn | 1.0 | Add | 1.00 / 0.22 / 0.02 | 0.5 | 1.5 | 0.4 | 0.4 | 0.2 | 0.9 |
-| Subtle Glow | 0.6 | Screen | 1.00 / 0.40 / 0.12 | 0.2 | 0.8 | 0.4 | 0.35 | 0 | 0 |
+| Preset | EV | Rim | Glow | Core | Glow | Halo | Fringe | Variation | Speed | Hot side |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Negative Scan Halation | 0.0 | 1.3 | 1.3 | 1.00/0.78/0.38 | 1.00/0.36/0.04 | 0.60/0.07/0.01 | 0.30 | 0.55 | 0.60 | 0.75 |
+| Soft Warm Glow | −0.3 | 1.8 | 1.8 | 1.00/0.72/0.40 | 1.00/0.42/0.10 | 0.50/0.10/0.02 | 0.10 | 0.30 | 0.30 | 0.50 |
+| Hot White Edge | +0.8 | 0.8 | 0.8 | 1.00/0.97/0.90 | 1.00/0.60/0.25 | 0.60/0.18/0.05 | 0.30 | 0.40 | 0.60 | 0.55 |
+| Deep Red Burn | +0.4 | 1.2 | 2.2 | 1.00/0.50/0.18 | 0.90/0.18/0.02 | 0.55/0.03/0.00 | 0.05 | 0.70 | 0.50 | 0.85 |
+| Subtle Edge | −1.0 | 0.8 | 0.7 | 1.00/0.78/0.42 | 1.00/0.38/0.06 | 0.50/0.08/0.02 | 0.15 | 0.25 | 0.30 | 0.60 |
+| Unstable Backlight | +0.3 | 1.0 | 1.2 | 1.00/0.78/0.38 | 1.00/0.36/0.04 | 0.60/0.07/0.01 | 0.35 | 1.00 | 1.00 | 0.90 |
+| Cool Fringe | 0.0 | 0.9 | 1.0 | 1.00/0.88/0.62 | 1.00/0.42/0.08 | 0.50/0.08/0.02 | 0.90 | 0.45 | 0.60 | 0.75 |
 
 ## Fonti
 
@@ -74,3 +78,4 @@ Sono un look, non una misura. Tutti i valori sono **[E]**. *Edge Leaks* riproduc
 - I. Stephenson, A. Saunders, *Simulating Film Grain using the Noise-Power Spectrum*, TPCG 2007: https://eprints.bournemouth.ac.uk/10547/1/grain.pdf
 - G. C. Higgins, K. F. Stultz, *Experimental Study of rms Granularity as a Function of Scanning-Spot Size*, JOSA 49 (1959) 925, doi:10.1364/JOSA.49.000925
 - Formati: https://www.filmkorn.org/super8data/database/articles_list/super8_fotmat_standards.htm · https://en.wikipedia.org/wiki/Standard_8_mm_film · https://en.wikipedia.org/wiki/16_mm_film · https://en.wikipedia.org/wiki/Film_perforations
+- Dehancer, *Overscan*: https://www.dehancer.com/learn/article/overscan · https://www.dehancer.com/learn/articles/dehancer-overscan-tool

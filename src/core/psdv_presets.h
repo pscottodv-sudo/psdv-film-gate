@@ -49,15 +49,21 @@ static const int kGrainPresetCount = sizeof(kGrainPresets) / sizeof(kGrainPreset
 struct PsdvLeakPreset
 {
     const char* label;
-    float opacity; int blend; float r, g, b; float frequency, spread, perfGlow, edgeGlow, flares, burn;
+    float ev, rim, halo;
+    float coreR, coreG, coreB, glowR, glowG, glowB, outerR, outerG, outerB;
+    float fringe, variation, speed, asym;
 };
-// Light leaks are a look, not a measurement: all values are aesthetic [E].
+// Perforation light looks [E]: matched by eye to negative scans with the backlight
+// halating around the holes (white core, orange glow, red halo, a cool fringe).
 static const PsdvLeakPreset kLeakPresets[] = {
-    {"Custom",         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {"Edge Leaks",     1.0f, 0, 1.00f, 0.28f, 0.04f, 0.3f, 1.0f, 0.90f, 0.70f, 0.00f, 0.00f},
-    {"Warm Flares",    1.0f, 0, 1.00f, 0.38f, 0.08f, 1.0f, 2.0f, 0.30f, 0.30f, 0.80f, 0.00f},
-    {"Organic Burn",   1.0f, 1, 1.00f, 0.22f, 0.02f, 0.5f, 1.5f, 0.40f, 0.40f, 0.20f, 0.90f},
-    {"Subtle Glow",    0.6f, 0, 1.00f, 0.40f, 0.12f, 0.2f, 0.8f, 0.40f, 0.35f, 0.00f, 0.00f},
+    {"Custom",                    0, 0, 0,  0, 0, 0,  0, 0, 0,  0, 0, 0,  0, 0, 0, 0},
+    {"Negative Scan Halation",     0.00f, 1.30f, 1.30f,  1.00f, 0.78f, 0.38f,  1.00f, 0.36f, 0.04f,  0.60f, 0.07f, 0.01f,  0.30f, 0.55f, 0.60f, 0.75f},
+    {"Soft Warm Glow",             -0.30f, 1.80f, 1.80f,  1.00f, 0.72f, 0.40f,  1.00f, 0.42f, 0.10f,  0.50f, 0.10f, 0.02f,  0.10f, 0.30f, 0.30f, 0.50f},
+    {"Hot White Edge",             0.80f, 0.80f, 0.80f,  1.00f, 0.97f, 0.90f,  1.00f, 0.60f, 0.25f,  0.60f, 0.18f, 0.05f,  0.30f, 0.40f, 0.60f, 0.55f},
+    {"Deep Red Burn",              0.40f, 1.20f, 2.20f,  1.00f, 0.50f, 0.18f,  0.90f, 0.18f, 0.02f,  0.55f, 0.03f, 0.00f,  0.05f, 0.70f, 0.50f, 0.85f},
+    {"Subtle Edge",                -1.00f, 0.80f, 0.70f,  1.00f, 0.78f, 0.42f,  1.00f, 0.38f, 0.06f,  0.50f, 0.08f, 0.02f,  0.15f, 0.25f, 0.30f, 0.60f},
+    {"Unstable Backlight",         0.30f, 1.00f, 1.20f,  1.00f, 0.78f, 0.38f,  1.00f, 0.36f, 0.04f,  0.60f, 0.07f, 0.01f,  0.35f, 1.00f, 1.00f, 0.90f},
+    {"Cool Fringe",                0.00f, 0.90f, 1.00f,  1.00f, 0.88f, 0.62f,  1.00f, 0.42f, 0.08f,  0.50f, 0.08f, 0.02f,  0.90f, 0.45f, 0.60f, 0.75f},
 };
 static const int kLeakPresetCount = sizeof(kLeakPresets) / sizeof(kLeakPresets[0]);
 

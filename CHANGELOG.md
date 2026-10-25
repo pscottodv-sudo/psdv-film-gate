@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 - luce delle perforazioni
+- La sezione *Light Leaks* è sostituita da **Perforation Light**: solo la luce intorno ai fori delle perforazioni, sempre presente quando le perforazioni sono visibili (non c'è più un interruttore), mai statica.
+- Rimossi bagliore del bordo del gate, Warm Flares e Organic Burn.
+- Profilo del bordo: nucleo bianco-giallo sottilissimo, alone arancio, alone rosso debole; il foro resta nero. Il lato più luminoso gira intorno al foro e l'intensità cambia da un fotogramma all'altro (ogni foro ha la sua variazione); frangia fredda opzionale sul lato in ombra.
+- Controlli: Exposure (EV), Rim Width, Glow Size, Core/Glow/Halo Colour, Chromatic Fringe, Variation, Variation Speed, Hot Side, Light Seed; 7 preset.
+
 ## 1.2.0 - bordo del gate vivo e defocus
 - **Edge Irregularity (µm)**, **Irregularity Size**, **Irregularity Motion**: piccole rientranze e sporgenze lungo il contorno del gate. Una parte è fissa (appartiene al gate), una parte cambia da un fotogramma all'altro. Non è weave e non è flicker: si muove solo il contorno. Anche gli aloni dei light leaks seguono il contorno irregolare.
 - **Gate Defocus**: gate fuori fuoco, con bordi sfumati e angoli arrotondati e più scuri, come la sfocatura reale di un'apertura rettangolare (profilo separabile gaussiano). La sfumatura è centrata sul contorno anche nella visualizzazione log/gamma.

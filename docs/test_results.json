@@ -142,7 +142,7 @@
  {
   "test": "extreme values on every slider",
   "ok": true,
-  "detail": "nonfinite 0, range 0.370..0.635"
+  "detail": "nonfinite 0, range 0.301..0.635"
  },
  {
   "test": "defaults render at 1440x1080",

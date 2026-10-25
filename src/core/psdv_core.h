@@ -384,16 +384,6 @@ PS_INLINE float psdv_gatehair(float gx, float gy, int frame, float amount, float
 }
 
 // =============================================================== light leaks
-PS_INLINE ps3 psdv_blend(ps3 E, ps3 L, int mode)
-{
-    if (mode == 1) return E + L;                                          // add
-    if (mode == 2) return P3(ps_max(E.x, L.x), ps_max(E.y, L.y), ps_max(E.z, L.z));   // lighten
-    if (mode == 3) {                                                      // soft light (relative)
-        return P3(E.x * (1.0f + 2.0f * L.x) + 0.25f * L.x * L.x, E.y * (1.0f + 2.0f * L.y) + 0.25f * L.y * L.y,
-                  E.z * (1.0f + 2.0f * L.z) + 0.25f * L.z * L.z);
-    }
-    return P3(E.x + L.x * (1.0f - ps_sat(E.x)), E.y + L.y * (1.0f - ps_sat(E.y)), E.z + L.z * (1.0f - ps_sat(E.z)));  // screen
-}
 
 // =============================================================== image sampling
 // SRC must provide: int w, h; ps3 fetch(int k, int x, int y) const  (k: 0 prev, 1 current, 2 next)
@@ -622,8 +612,6 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
     // ---- frame slot: 0 current, +1 above = previous, -1 below = next
     int slot = gateOn ? (int)ps_floor(yy / pitch + 0.5f) : 0;
     float yl = yy - (float)slot * pitch;
-    int frame = T - slot;
-    float yRoll = yl - (float)frame * pitch;
     float dGate, gx;
     ps3 E = psdv_slot(s, p, g, slot, xx, yy, mmPerPx, pitch, gateW, gateH, radius, canvasAR, bw, dGate, gx);
     // a soft / defocused / irregular gate edge can reach across the frame line:
@@ -669,53 +657,57 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
             float ring = (1.0f - ps_smooth(0.0f, 2.0f * aa, ps_abs(dPerf))) * ps_sat(p.perfOpacity);
             E = ps_mix3(E, P3(0.6f, 0.6f, 0.6f), ring);
         }
-    }
 
-    // ---- light leaks (light on the film: they also glow over the black areas)
-    if (p.leakOn && p.leakOpacity > 0.0f) {
-        int lseed = 300 + p.leakSeed * 131;
-        float tt = (float)T * 0.08f * p.leakFrequency;
-        float spread = ps_max(p.leakSpread, 0.05f);
-        float L = 0.0f;
-        if (gateOn && p.edgeGlow > 0.0f) {
-            // thin saturated rim on the gate edge plus a faint wide halo over the black
-            float w = 0.0030f * gateH * spread;
-            float side = ps_abs(gx) / (0.5f * gateW);                 // a little stronger on the sides
-            float flick = 0.75f + 0.25f * psdv_noiseT(tt * 3.0f + (float)frame * 0.37f, 3, lseed);
-            float d = ps_abs(dGate);
-            float rim = ps_exp(-d / w) + 0.18f * ps_exp(-d / (5.0f * w));
-            if (dGate < 0.0f) rim *= 0.6f;                              // less inside the picture
-            L += p.edgeGlow * rim * flick * (0.75f + 0.25f * side);
-        }
-        if (gateOn && p.perfOn && p.perfGlow > 0.0f) {
-            // bright rim hugging the hole, quick fall-off, faint wide halo; dark inside
-            float w = 0.030f * g.perfH * spread;
-            float d = ps_abs(dPerf);
-            float rim = ps_exp(-d / w) + 0.20f * ps_exp(-d / (5.0f * w));
-            if (dPerf < 0.0f) rim = ps_exp(dPerf / (0.4f * w)) * 0.9f;
-            float flick = 0.8f + 0.2f * psdv_noiseT(tt * 2.0f + (float)frame * 0.21f, 5, lseed);
-            L += p.perfGlow * rim * flick;
-        }
-        if (p.flares > 0.0f) {
-            for (int side = 0; side < 2; ++side) {                        // left and right edge, independent
-                float sd = (float)side;
-                float dEdge = 0.5f * gateW + (side == 0 ? gx : -gx);       // >0 inside the picture
-                float act = ps_smooth(0.35f, 0.9f, psdv_noiseT(tt + sd * 13.0f, 7, lseed));
-                float along = psdv_noise2(yRoll / gateH * 1.2f + sd * 5.0f, tt * 0.5f, lseed + 9);
-                float fall = dEdge >= 0.0f ? ps_exp(-dEdge / (0.22f * gateW * spread))
-                                           : ps_exp(dEdge / (0.06f * gateW * spread));
-                L += p.flares * 2.0f * act * along * along * fall;
+        // ---- perforation light: the scanner backlight pours through the hole and
+        // halates into the emulsion and base around it. In a negative scan the hole
+        // itself is black and the edge glows: white core, orange glow, red halo.
+        // It is never static: intensity and the hot side change from frame to frame.
+        if (p.leakOn) {
+            int useB = (both && dPerf < dA) ? 1 : 0;
+            float rx = useB ? xx + pxL : xL;                      // position relative to the hole centre
+            float rxs = useB ? -rx : rx;                          // mirrored for the right-hand hole
+            float d = dPerf;
+            float holeId = ps_floor(rel + 0.5f) * 2.0f + (float)useB;
+            int ls = 300 + p.leakSeed * 131;
+            float rimW = 0.0045f * ph * ps_max(p.perfRim, 0.05f);
+            float hal = ps_max(p.perfHalo, 0.05f);
+            float dout = ps_max(d, 0.0f), din = ps_max(-d, 0.0f);
+            // Gaussian fall-offs: the light must die out within a fraction of the hole
+            // height, otherwise (log-encoded) it washes over the whole film
+            float inner = ps_exp(-din / (0.6f * rimW));         // quick fall-off into the hole
+            float c1 = dout / rimW, g1 = dout / (0.016f * ph * hal), h1 = dout / (0.05f * ph * hal);
+            float core = ps_exp(-c1 * c1) * inner;
+            float glow = ps_exp(-g1 * g1) * inner;
+            float halo = ps_exp(-h1 * h1) * inner;
+            // variation over time: slow drift mixed with frame-to-frame changes
+            float sp = ps_sat(p.perfSpeed), va = ps_sat(p.perfVariation);
+            float tSlow = (float)T / (1.0f + 23.0f * (1.0f - sp));
+            float n1 = psdv_noiseT(tSlow + holeId * 0.37f, 11, ls);
+            float n2 = psdv_rand(T, (int)holeId + 1000, ls + 3);
+            float inten = 1.0f + va * 0.9f * (ps_lerp(n1, n2, sp) - 0.5f) * 2.0f;
+            // the hot side wanders around the hole
+            float ang = ps_atan2(hy / ph, rxs / pw);
+            float ph0 = 6.2831853f * (psdv_noiseT(tSlow * 0.5f + holeId * 0.11f, 13, ls) + va * 0.5f * n2);
+            float side = 0.5f + 0.5f * ps_cos(ang - ph0);
+            float ca = ps_cos(ang), sa = ps_sin(ang);                 // noise on a circle: no seam at +-pi
+            side = side * (0.75f + 0.5f * psdv_noise2(ca * 0.6f + 7.0f + holeId, sa * 0.6f + tSlow * 0.7f, ls + 5));
+            float asym = ps_sat(p.perfAsym);
+            float sideK = ps_lerp(1.0f, 0.03f + 2.2f * side * side, asym);
+            // organic unevenness along the rim (changes with the frame like the rest)
+            sideK = sideK * (0.65f + 0.7f * psdv_noise2(ca * 3.5f + 3.0f + holeId * 2.0f, sa * 3.5f + tSlow * 1.3f, ls + 7));
+            float k = ps_exp2(p.perfLightEV) * ps_max(inten, 0.0f) * sideK;
+            ps3 coreC = P3(ps_max(p.coreR, 0.0f), ps_max(p.coreG, 0.0f), ps_max(p.coreB, 0.0f));
+            ps3 glowC = P3(ps_max(p.glowR, 0.0f), ps_max(p.glowG, 0.0f), ps_max(p.glowB, 0.0f));
+            ps3 outC = P3(ps_max(p.outerR, 0.0f), ps_max(p.outerG, 0.0f), ps_max(p.outerB, 0.0f));
+            ps3 Lp = (coreC * (0.40f * core) + glowC * (0.32f * glow) + outC * (0.025f * halo)) * k;
+            // cool chromatic fringe just outside the rim, on the dim side
+            if (p.perfFringe > 0.0f) {
+                float fz = (dout - 1.6f * rimW) / (0.9f * rimW);
+                float fr = ps_exp(-fz * fz) * inner * (1.0f - side);
+                Lp = Lp + P3(0.20f, 0.42f, 1.0f) * (0.35f * p.perfFringe * fr * ps_exp2(p.perfLightEV));
             }
+            E = E + Lp;
         }
-        if (p.burn > 0.0f) {
-            float n = psdv_fbm(gx / gateH * 1.8f / spread + tt * 0.6f, yRoll / gateH * 1.8f / spread, lseed + 21);
-            float b = ps_sat((n - 0.56f) * 4.0f);
-            float edge = ps_exp(-ps_max(0.5f * gateW - ps_abs(gx), 0.0f) / (0.45f * gateW));
-            L += p.burn * 3.0f * b * b * (0.35f + 0.65f * edge);
-        }
-        L = L * p.leakOpacity;
-        ps3 tint = P3(ps_max(p.tintR, 0.0f), ps_max(p.tintG, 0.0f), ps_max(p.tintB, 0.0f));
-        E = psdv_blend(E, tint * L, p.leakBlend);
     }
     return psdv_encode(E, enc);
 }

@@ -68,17 +68,18 @@ struct PsdvParams
     float grainClumping;  // share of the grain in large clumps 0..1
     int   grainSeed;
 
-    // ---- light leaks
-    int   leakOn;
-    float leakOpacity;
-    int   leakBlend;      // 0 screen, 1 add, 2 lighten, 3 soft light
-    float tintR, tintG, tintB;
-    float leakFrequency;  // speed of change over time
-    float leakSpread;     // size multiplier
-    float perfGlow;       // glow around the perforations
-    float edgeGlow;       // glow along the gate edges
-    float flares;         // warm flares entering from the frame sides
-    float burn;           // organic burn patches
+    // ---- perforation light (halation of the scanner backlight around the holes)
+    int   leakOn;         // always on in the plugin when perforations are shown
+    float perfLightEV;    // exposure of the backlight, stops (-4..+4)
+    float perfRim;        // width of the bright rim hugging the hole (multiplier)
+    float perfHalo;       // size of the coloured glow and halo (multiplier)
+    float coreR, coreG, coreB;      // colour at the hole edge
+    float glowR, glowG, glowB;      // colour of the glow
+    float outerR, outerG, outerB;   // colour of the faint outer halo
+    float perfFringe;     // cool chromatic fringe on the dim side
+    float perfVariation;  // how much the light changes between frames 0..1
+    float perfSpeed;      // 0 slow drift .. 1 frame-to-frame changes
+    float perfAsym;       // 0 even all around .. 1 strongly one-sided
     int   leakSeed;
 
     // ---- per-frame values, filled by psdv_prepare() on the host (not UI parameters)

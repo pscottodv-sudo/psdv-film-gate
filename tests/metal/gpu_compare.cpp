@@ -179,9 +179,9 @@ std::vector<Case> cases(bool quick)
             }
             c.push_back(k);
         }
-        c.push_back({"leaks_warm_flares", 1920, 1080, {"flares=0.8", "leakSpread=2", "perfGlow=0.3", "edgeGlow=0.3"}, false});
-        c.push_back({"leaks_organic_burn_add", 1920, 1080, {"leakBlend=1", "burn=0.9", "flares=0.2"}, false});
-        c.push_back({"leaks_soft_light", 1920, 1080, {"leakBlend=3"}, false});
+        c.push_back({"perf_light_hot_white", 1920, 1080, {"perfLightEV=0.7", "perfRim=0.7", "perfHalo=0.7", "perfFringe=0.3"}, false});
+        c.push_back({"perf_light_unstable", 1920, 1080, {"perfVariation=1", "perfSpeed=1", "perfAsym=0.8", "frameIndex=31"}, false});
+        c.push_back({"perf_light_16mm_both", 1920, 1080, {"format=2", "perfSide=3", "perfHalo=2", "perfFringe=0.8"}, false});
         c.push_back({"perforations_backlit_both", 1920, 1080, {"perfStyle=1", "perfSide=3", "format=2"}, false});
         c.push_back({"perforations_outline", 1920, 1080, {"perfStyle=2"}, false});
         c.push_back({"picture_only_fit", 1920, 1080, {"gateFraming=1", "perfOn=0", "neighbors=0"}, false});
@@ -190,7 +190,7 @@ std::vector<Case> cases(bool quick)
         c.push_back({"strong_weave_rotation", 1920, 1080, {"weaveH=60", "weaveV=90", "rotation=1.5", "scanJitter=20", "frameIndex=37"}, false});
         c.push_back({"dirt_heavy", 1920, 1080, {"dust=2", "fibres=2", "gateHair=1", "scratches=1", "dirtPolarity=2"}, false});
         c.push_back({"extremes", 1920, 1080, {"zoom=8", "frameSize=2", "edgeSoftness=30", "grainSize=10", "grainIntensity=20",
-                                               "leakOpacity=5", "perfGlow=10", "edgeGlow=10", "flicker=2", "frameSpacing=2"}, false});
+                                               "perfLightEV=4", "perfRim=10", "perfHalo=10", "flicker=2", "frameSpacing=2"}, false});
         c.push_back({"vertical_1080x1920", 1080, 1920, {}, false});
         c.push_back({"uhd_3840x2160", 3840, 2160, {}, false});
         c.push_back({"odd_size_1001x777", 1001, 777, {"format=0"}, false});

@@ -18,8 +18,10 @@ inline void psdvDefaults(PsdvParams& p)
     p.scanJitter = 2; p.flicker = 0.10f; p.flickerRandom = 0.6f;
     p.grainOn = 1; p.emulsion = 1; p.rms = 8; p.grainIntensity = 1; p.grainSize = 1;
     p.shadowResponse = 1; p.midResponse = 1; p.highlightResponse = 1; p.colorGrain = 0.85f; p.negGamma = 0.6f; p.grainSoftness = 1.0f; p.grainClumping = 0.4f;
-    p.leakOn = 1; p.leakOpacity = 1; p.leakBlend = 0; p.tintR = 1; p.tintG = 0.28f; p.tintB = 0.04f;
-    p.leakFrequency = 0.3f; p.leakSpread = 1; p.perfGlow = 0.9f; p.edgeGlow = 0.7f;
+    p.leakOn = 1; p.perfLightEV = 0; p.perfRim = 1.3f; p.perfHalo = 1.3f;
+    p.coreR = 1.0f; p.coreG = 0.78f; p.coreB = 0.38f; p.glowR = 1.0f; p.glowG = 0.36f; p.glowB = 0.04f;
+    p.outerR = 0.60f; p.outerG = 0.07f; p.outerB = 0.01f;
+    p.perfFringe = 0.30f; p.perfVariation = 0.55f; p.perfSpeed = 0.6f; p.perfAsym = 0.75f;
 }
 
 #define FIELD_I(n) if (k == #n) { p.n = (int)v; return true; }
@@ -34,9 +36,9 @@ inline bool psdvSetParam(PsdvParams& p, const std::string& k, double v)
     FIELD_I(dirtPolarity) FIELD_I(weaveOn) FIELD_F(weaveH) FIELD_F(weaveV) FIELD_F(weaveRandom) FIELD_F(weaveCycle)
     FIELD_F(rotation) FIELD_F(scanJitter) FIELD_F(flicker) FIELD_F(flickerRandom) FIELD_I(weaveSeed) FIELD_I(grainOn)
     FIELD_I(emulsion) FIELD_F(rms) FIELD_F(grainIntensity) FIELD_F(grainSize) FIELD_F(shadowResponse) FIELD_F(midResponse)
-    FIELD_F(highlightResponse) FIELD_F(colorGrain) FIELD_F(negGamma) FIELD_F(grainSoftness) FIELD_F(grainClumping) FIELD_I(grainSeed) FIELD_I(leakOn) FIELD_F(leakOpacity)
-    FIELD_I(leakBlend) FIELD_F(tintR) FIELD_F(tintG) FIELD_F(tintB) FIELD_F(leakFrequency) FIELD_F(leakSpread)
-    FIELD_F(perfGlow) FIELD_F(edgeGlow) FIELD_F(flares) FIELD_F(burn) FIELD_I(leakSeed)
+    FIELD_F(highlightResponse) FIELD_F(colorGrain) FIELD_F(negGamma) FIELD_F(grainSoftness) FIELD_F(grainClumping) FIELD_I(grainSeed) FIELD_I(leakOn) FIELD_F(perfLightEV) FIELD_F(perfRim) FIELD_F(perfHalo)
+    FIELD_F(coreR) FIELD_F(coreG) FIELD_F(coreB) FIELD_F(glowR) FIELD_F(glowG) FIELD_F(glowB) FIELD_F(outerR) FIELD_F(outerG) FIELD_F(outerB)
+    FIELD_F(perfFringe) FIELD_F(perfVariation) FIELD_F(perfSpeed) FIELD_F(perfAsym) FIELD_I(leakSeed)
     return false;
 }
 
