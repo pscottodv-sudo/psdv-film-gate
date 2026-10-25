@@ -58,15 +58,16 @@ I preset di gate (dimensione a schermo, spaziatura, morbidezza del bordo, sporco
 Look, non misura: tutti i valori sono **[E]**, regolati a occhio sul riferimento fornito (scansione negativa con foro nero e bordo bianco-arancio-rosso).
 Ricerca su Dehancer: lo strumento *Overscan* di Dehancer usa texture ricavate da scansioni reali; l'alone sui bordi delle perforazioni è un effetto di halation che dipende dalla retroilluminazione e dall'esposizione della scansione, e si regola con *Exposure* (−2…+2 EV); *Static Gate* OFF fa variare il gate da un fotogramma all'altro. Le texture e il codice di Dehancer sono proprietari: qui il comportamento è ricostruito da zero (profilo del bordo procedurale, variazione nel tempo), non copiato.
 
-| Preset | EV | Rim | Glow | Core | Glow | Halo | Fringe | Variation | Speed | Hot side |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Negative Scan Halation | 0.0 | 1.3 | 1.3 | 1.00/0.78/0.38 | 1.00/0.36/0.04 | 0.60/0.07/0.01 | 0.30 | 0.55 | 0.60 | 0.75 |
-| Soft Warm Glow | −0.3 | 1.8 | 1.8 | 1.00/0.72/0.40 | 1.00/0.42/0.10 | 0.50/0.10/0.02 | 0.10 | 0.30 | 0.30 | 0.50 |
-| Hot White Edge | +0.8 | 0.8 | 0.8 | 1.00/0.97/0.90 | 1.00/0.60/0.25 | 0.60/0.18/0.05 | 0.30 | 0.40 | 0.60 | 0.55 |
-| Deep Red Burn | +0.4 | 1.2 | 2.2 | 1.00/0.50/0.18 | 0.90/0.18/0.02 | 0.55/0.03/0.00 | 0.05 | 0.70 | 0.50 | 0.85 |
-| Subtle Edge | −1.0 | 0.8 | 0.7 | 1.00/0.78/0.42 | 1.00/0.38/0.06 | 0.50/0.08/0.02 | 0.15 | 0.25 | 0.30 | 0.60 |
-| Unstable Backlight | +0.3 | 1.0 | 1.2 | 1.00/0.78/0.38 | 1.00/0.36/0.04 | 0.60/0.07/0.01 | 0.35 | 1.00 | 1.00 | 0.90 |
-| Cool Fringe | 0.0 | 0.9 | 1.0 | 1.00/0.88/0.62 | 1.00/0.42/0.08 | 0.50/0.08/0.02 | 0.90 | 0.45 | 0.60 | 0.75 |
+| Preset | EV | Rim | Glow | Rim colour | Glow colour | Cool band colour | Cool band | Variation | Speed | Lean | Direction |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Negative Scan Halation | 0.0 | 1.3 | 1.3 | 1.00/0.86/0.50 | 1.00/0.34/0.03 | 0.10/0.40/1.00 | 1.0 | 0.55 | 0.60 | 1.0 | 190° |
+| Soft Warm Glow | −0.3 | 1.8 | 1.8 | 1.00/0.80/0.50 | 1.00/0.42/0.10 | 0.20/0.35/0.90 | 0.5 | 0.30 | 0.30 | 0.6 | 190° |
+| Hot White Edge | +0.6 | 0.8 | 0.9 | 1.00/0.97/0.90 | 1.00/0.55/0.20 | 0.15/0.35/1.00 | 0.8 | 0.40 | 0.60 | 0.8 | 190° |
+| Deep Red Burn | +0.4 | 1.2 | 2.0 | 1.00/0.55/0.20 | 0.90/0.18/0.02 | 0.10/0.20/0.80 | 0.4 | 0.70 | 0.50 | 1.0 | 200° |
+| Subtle Edge | −1.0 | 0.8 | 0.8 | 1.00/0.86/0.55 | 1.00/0.38/0.06 | 0.10/0.40/1.00 | 0.6 | 0.25 | 0.30 | 0.8 | 190° |
+| Unstable Backlight | +0.3 | 1.0 | 1.3 | 1.00/0.86/0.50 | 1.00/0.34/0.03 | 0.10/0.40/1.00 | 1.0 | 1.00 | 1.00 | 1.0 | 190° |
+| Strong Blue Fringe | 0.0 | 1.0 | 1.4 | 1.00/0.90/0.62 | 1.00/0.40/0.06 | 0.08/0.30/1.00 | 2.0 | 0.45 | 0.60 | 1.0 | 190° |
+| Even Rim (no lean) | 0.0 | 1.2 | 1.0 | 1.00/0.86/0.50 | 1.00/0.36/0.04 | 0.10/0.40/1.00 | 0.3 | 0.40 | 0.50 | 0.0 | 190° |
 
 ## Fonti
 

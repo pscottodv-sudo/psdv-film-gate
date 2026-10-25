@@ -1,4 +1,4 @@
-# psdv-film gate emulation 1.3
+# psdv-film gate emulation 1.4
 
 Plugin **OpenFX** per **DaVinci Resolve su macOS** (rendering **Metal**, bundle universale Apple Silicon + Intel) che emula la finestra di ripresa di una cinepresa: gate e perforazioni, gate weave, grana di emulsione e luce delle perforazioni. Ogni sezione si attiva da sola, ha i suoi preset e un controllo manuale completo. L'interfaccia è in inglese.
 
@@ -122,9 +122,9 @@ Controlli: *Emulsion Type*, *RMS Granularity* (valore del datasheet Kodak a D 1.
 La grana è legata alla pellicola in mm. Un Super 8 mostra quindi più grana di un 35mm con lo stesso stock, e il fotogramma sopra ha la stessa grana che aveva quando era al centro.
 
 ### Perforation Light
-È la luce del retroilluminatore dello scanner che passa dal foro della perforazione e si diffonde (halation) nell'emulsione intorno: in una scansione negativa il foro è nero e il bordo brilla, dal bianco-giallo al rosso passando per l'arancio. È **sempre presente** quando ci sono le perforazioni e **non è mai statica**: intensità e lato più caldo cambiano da un fotogramma all'altro.
-Preset: **Negative Scan Halation** (default), Soft Warm Glow, Hot White Edge, Deep Red Burn, Subtle Edge, Unstable Backlight, Cool Fringe.
-Controlli: *Exposure (EV)* (forza della luce, in stop, come l'Exposure dell'Overscan di Dehancer), *Rim Width*, *Glow Size*, *Core / Glow / Halo Colour*, *Chromatic Fringe* (frangia fredda sul lato in ombra), *Variation* (0 = statica), *Variation Speed* (deriva lenta ↔ ogni frame), *Hot Side* (uniforme ↔ un lato molto più luminoso), *Light Seed*.
+È la luce del retroilluminatore dello scanner che passa dal foro e si diffonde intorno (halation), ricostruita su un fotogramma dell'Overscan di Dehancer: foro nero, linea sottile caldo-bianca sul bordo, bagliore arancio da un lato, banda blu poco distante dal bordo. È sempre presente con le perforazioni (si spegne con *Show Perforations* o *Opacity* = 0) e non è mai statica.
+Preset: **Negative Scan Halation** (default), Soft Warm Glow, Hot White Edge, Deep Red Burn, Subtle Edge, Unstable Backlight, Strong Blue Fringe, Even Rim (no lean).
+Controlli: *Opacity*, *Exposure (EV)*, *Rim Width*, *Glow Size*, *Rim / Glow / Cool Band Colour*, *Cool Band*, *Lean*, *Light Direction (°)*, *Variation*, *Variation Speed*, *Light Seed*. Nella sezione del gate: *Perforation Irregularity (µm)* per il contorno irregolare dei fori.
 
 ## 5. Problemi noti e soluzioni
 

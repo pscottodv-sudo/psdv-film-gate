@@ -22,7 +22,7 @@
     "Grain presets: only Double-X 5222 (RMS 14) and the Ektachrome/E100 preset (RMS 8) use published values; the others are estimates."
 #define kPluginIdentifier "it.psdv.filmgate"
 #define kPluginVersionMajor 1
-#define kPluginVersionMinor 3
+#define kPluginVersionMinor 4
 
 // ------------------------------------------------------------------ parameter names
 // input
@@ -59,6 +59,7 @@
 #define P_PERF_SIDE "perforationSide"
 #define P_PERF_SIZE "perforationSize"
 #define P_PERF_OPACITY "perforationOpacity"
+#define P_PERF_IRR "perforationIrregularity"
 #define P_DUST "dust"
 #define P_FIBRES "fibres"
 #define P_GATE_HAIR "gateHair"
@@ -104,13 +105,15 @@
 #define P_PL_VAR "perforationLightVariation"
 #define P_PL_SPEED "perforationLightSpeed"
 #define P_PL_ASYM "perforationLightAsymmetry"
+#define P_PL_ANGLE "perforationLightDirection"
+#define P_PL_OPACITY "perforationLightOpacity"
 #define P_LEAK_SEED "leakSeed"
 
 static const char* kGateSectionParams[] = {P_FORMAT, P_FRAMING, P_FRAME_SIZE, P_NEIGHBORS, P_SPACING, P_PERF_ON, P_PERF_STYLE,
                                            P_EDGE_SOFT, P_EDGE_DARK, P_EDGE_DARK_W, P_CORNER, P_EDGE_IRR, P_EDGE_IRR_SIZE, P_EDGE_IRR_MOTION, P_DEFOCUS, P_DUST, P_FIBRES, P_GATE_HAIR, P_SCRATCHES};
 static const char* kWeaveSectionParams[] = {P_WEAVE_H, P_WEAVE_V, P_WEAVE_RANDOM, P_WEAVE_CYCLE, P_ROTATION, P_SCAN_JITTER, P_FLICKER, P_FLICKER_RANDOM};
 static const char* kGrainSectionParams[] = {P_EMULSION, P_RMS, P_GRAIN_SIZE, P_COLOR_GRAIN, P_NEG_GAMMA, P_GRAIN_SOFT, P_GRAIN_CLUMP, P_SHADOW, P_MID, P_HIGH};
-static const char* kLeakSectionParams[] = {P_PL_EV, P_PL_RIM, P_PL_HALO, P_PL_CORE, P_PL_GLOW, P_PL_OUTER, P_PL_FRINGE, P_PL_VAR, P_PL_SPEED, P_PL_ASYM};
+static const char* kLeakSectionParams[] = {P_PL_EV, P_PL_RIM, P_PL_HALO, P_PL_CORE, P_PL_GLOW, P_PL_OUTER, P_PL_FRINGE, P_PL_VAR, P_PL_SPEED, P_PL_ASYM, P_PL_ANGLE};
 
 static bool inList(const std::string& n, const char* const* list, size_t count)
 {
@@ -225,6 +228,7 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
     p.perfSide = choice(P_PERF_SIDE, t);
     p.perfScale = (float)dbl(P_PERF_SIZE, t);
     p.perfOpacity = (float)dbl(P_PERF_OPACITY, t);
+    p.perfIrregularity = (float)dbl(P_PERF_IRR, t);
     p.dust = (float)dbl(P_DUST, t); p.fibres = (float)dbl(P_FIBRES, t);
     p.gateHair = (float)dbl(P_GATE_HAIR, t); p.scratches = (float)dbl(P_SCRATCHES, t);
     p.dirtPolarity = choice(P_DIRT_POL, t);
@@ -270,6 +274,8 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
     p.perfVariation = (float)dbl(P_PL_VAR, t);
     p.perfSpeed = (float)dbl(P_PL_SPEED, t);
     p.perfAsym = (float)dbl(P_PL_ASYM, t);
+    p.perfAngle = (float)dbl(P_PL_ANGLE, t);
+    p.perfLightOpacity = (float)dbl(P_PL_OPACITY, t);
     p.leakSeed = integer(P_LEAK_SEED, t);
 }
 
@@ -384,8 +390,9 @@ void PsdvFilmGate::changedParam(const OFX::InstanceChangedArgs& args, const std:
             setD(P_PL_EV, q.ev); setD(P_PL_RIM, q.rim); setD(P_PL_HALO, q.halo);
             fetchRGBParam(P_PL_CORE)->setValue(q.coreR, q.coreG, q.coreB);
             fetchRGBParam(P_PL_GLOW)->setValue(q.glowR, q.glowG, q.glowB);
-            fetchRGBParam(P_PL_OUTER)->setValue(q.outerR, q.outerG, q.outerB);
-            setD(P_PL_FRINGE, q.fringe); setD(P_PL_VAR, q.variation); setD(P_PL_SPEED, q.speed); setD(P_PL_ASYM, q.asym);
+            fetchRGBParam(P_PL_OUTER)->setValue(q.coolR, q.coolG, q.coolB);
+            setD(P_PL_FRINGE, q.cool); setD(P_PL_VAR, q.variation); setD(P_PL_SPEED, q.speed); setD(P_PL_ASYM, q.lean);
+            setD(P_PL_ANGLE, q.angle);
         }
     } else if (inList(name, kGateSectionParams, LIST_SIZE(kGateSectionParams))) {
         if (choice(P_GATE_PRESET, args.time) != 0) setC(P_GATE_PRESET, 0);
@@ -562,6 +569,8 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     cparam(desc, page, gG, P_PERF_SIDE, "Perforation Side", "Where the perforations are drawn.", psd, 4, 0);
     dparam(desc, page, gG, P_PERF_SIZE, "Perforation Size", "Multiplier of the real perforation size.", 1.0, 0.1, 4.0, 0.5, 2.0);
     dparam(desc, page, gG, P_PERF_OPACITY, "Perforation Opacity", "", 1.0, 0.0, 1.0, 0.0, 1.0);
+    dparam(desc, page, gG, P_PERF_IRR, "Perforation Irregularity (µm)",
+           "Bumps along the outline of the holes. Fixed part + moving part (Irregularity Motion); the perforation light follows them.", 6.0, 0.0, 200.0, 0.0, 40.0);
     dparam(desc, page, gG, P_DUST, "Dust", "Dust specks on the film (same physical size on every gauge).", 0.15, 0.0, 10.0, 0.0, 2.0);
     dparam(desc, page, gG, P_FIBRES, "Fibres & Hairs", "Curved fibres on the film.", 0.04, 0.0, 10.0, 0.0, 2.0);
     dparam(desc, page, gG, P_GATE_HAIR, "Hair In Gate", "A hair caught in the camera gate: fixed to the gate edge.", 0.0, 0.0, 1.0, 0.0, 1.0);
@@ -612,14 +621,15 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     cparam(desc, page, gL, P_LEAK_PRESET, "Perforation Light Preset",
            "Scanner backlight halating around the sprocket holes. Always present with the perforations; never static.",
            lp.data(), (int)lp.size(), 1);
+    dparam(desc, page, gL, P_PL_OPACITY, "Opacity", "Overall amount of the perforation light (0 = none).", 1.0, 0.0, 1.0, 0.0, 1.0);
     dparam(desc, page, gL, P_PL_EV, "Exposure (EV)", "Strength of the backlight around the holes, in stops.", 0.0, -6.0, 4.0, -3.0, 2.0);
     dparam(desc, page, gL, P_PL_RIM, "Rim Width", "Width of the bright line hugging the hole.", 1.3, 0.05, 10.0, 0.2, 4.0);
-    dparam(desc, page, gL, P_PL_HALO, "Glow Size", "Size of the coloured glow and of the faint halo.", 1.3, 0.05, 10.0, 0.2, 4.0);
+    dparam(desc, page, gL, P_PL_HALO, "Glow Size", "Size of the orange glow and of the blue band.", 1.3, 0.05, 10.0, 0.2, 4.0);
     {
         struct { const char* n; const char* l; const char* h; double r, g, b; } cols[] = {
-            {P_PL_CORE, "Core Colour", "Colour right at the hole edge (hottest).", 1.0, 0.78, 0.38},
-            {P_PL_GLOW, "Glow Colour", "Colour of the glow around the rim.", 1.0, 0.36, 0.04},
-            {P_PL_OUTER, "Halo Colour", "Colour of the faint wide halo.", 0.60, 0.07, 0.01}};
+            {P_PL_CORE, "Rim Colour", "Colour of the thin line right on the hole edge.", 1.0, 0.86, 0.50},
+            {P_PL_GLOW, "Glow Colour", "Colour of the glow on the leaning side.", 1.0, 0.34, 0.03},
+            {P_PL_OUTER, "Cool Band Colour", "Colour of the band a little away from the edge, opposite the glow.", 0.10, 0.40, 1.0}};
         for (auto& c : cols) {
             RGBParamDescriptor* d = desc.defineRGBParam(c.n);
             d->setLabels(c.l, c.l, c.l);
@@ -629,10 +639,11 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
             page->addChild(*d);
         }
     }
-    dparam(desc, page, gL, P_PL_FRINGE, "Chromatic Fringe", "Cool blue fringe just outside the rim on the dim side.", 0.30, 0.0, 2.0, 0.0, 1.0);
+    dparam(desc, page, gL, P_PL_FRINGE, "Cool Band", "Strength of the blue band (0 = none).", 1.0, 0.0, 4.0, 0.0, 2.0);
+    dparam(desc, page, gL, P_PL_ASYM, "Lean", "0 = the same light all around the hole, 1 = the light sits on one side and the opposite edge stays clean.", 1.0, 0.0, 1.0, 0.0, 1.0);
+    dparam(desc, page, gL, P_PL_ANGLE, "Light Direction (°)", "Side the glow leans to: 0 right, 90 up, 180 left, 270 down. The blue band sits 80° further round. Mirrored for holes on the other side.", 190.0, 0.0, 360.0, 0.0, 360.0);
     dparam(desc, page, gL, P_PL_VAR, "Variation", "How much the light changes from frame to frame (0 = static).", 0.55, 0.0, 1.0, 0.0, 1.0);
     dparam(desc, page, gL, P_PL_SPEED, "Variation Speed", "0 = slow drift over many frames, 1 = changes every frame.", 0.6, 0.0, 1.0, 0.0, 1.0);
-    dparam(desc, page, gL, P_PL_ASYM, "Hot Side", "0 = even all around the hole, 1 = one side much brighter (the hot side wanders).", 0.75, 0.0, 1.0, 0.0, 1.0);
     iparam(desc, page, gL, P_LEAK_SEED, "Light Seed", "Changes the variation pattern.", 0, 0, 100000);
 }
 

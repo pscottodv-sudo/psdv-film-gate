@@ -40,6 +40,7 @@ struct PsdvParams
     int   perfSide;       // 0 gauge default, 1 left, 2 right, 3 both
     float perfScale;
     float perfOpacity;
+    float perfIrregularity; // bumps of the hole outline, micrometres (uses Irregularity Motion)
     float dust, fibres, gateHair, scratches;
     int   dirtPolarity;   // 0 auto, 1 dark, 2 bright
 
@@ -75,11 +76,13 @@ struct PsdvParams
     float perfHalo;       // size of the coloured glow and halo (multiplier)
     float coreR, coreG, coreB;      // colour at the hole edge
     float glowR, glowG, glowB;      // colour of the glow
-    float outerR, outerG, outerB;   // colour of the faint outer halo
-    float perfFringe;     // cool chromatic fringe on the dim side
+    float outerR, outerG, outerB;   // colour of the wide cool halo
+    float perfFringe;     // strength of the wide cool halo
     float perfVariation;  // how much the light changes between frames 0..1
     float perfSpeed;      // 0 slow drift .. 1 frame-to-frame changes
-    float perfAsym;       // 0 even all around .. 1 strongly one-sided
+    float perfAsym;       // how far the glow leans to one side (offset of the halos)
+    float perfAngle;      // direction the light leans to, degrees (0 = right, 90 = up)
+    float perfLightOpacity; // overall mix 0..1
     int   leakSeed;
 
     // ---- per-frame values, filled by psdv_prepare() on the host (not UI parameters)

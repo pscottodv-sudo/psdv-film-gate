@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 - luce delle perforazioni rifatta sul riferimento Dehancer
+- Nuovo profilo a tre strati: linea sottile caldo-bianca sul bordo del foro, bagliore arancio che **pende da un lato**, banda **blu** poco distante dal bordo ruotata di 80° rispetto all'arancio (di default: arancio a sinistra, blu sotto, bordo opposto pulito).
+- Controlli: **Opacity**, Exposure (EV), Rim Width, Glow Size, Rim / Glow / Cool Band Colour, **Cool Band**, **Lean** (uniforme ↔ da un lato), **Light Direction (°)**, Variation, Variation Speed, Light Seed. 8 preset.
+- **Perforation Irregularity (µm)**: contorno del foro irregolare, con parte fissa e parte che cambia da un fotogramma all'altro (usa *Irregularity Motion*); la luce segue il contorno.
+- **Perforation Opacity** ora agisce anche sulla luce: a 0 spariscono foro e luce (prima, con il foro nero sul bordo nero, sembrava non fare nulla).
+
 ## 1.3.0 - luce delle perforazioni
 - La sezione *Light Leaks* è sostituita da **Perforation Light**: solo la luce intorno ai fori delle perforazioni, sempre presente quando le perforazioni sono visibili (non c'è più un interruttore), mai statica.
 - Rimossi bagliore del bordo del gate, Warm Flares e Organic Burn.

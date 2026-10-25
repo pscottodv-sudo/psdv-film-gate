@@ -649,6 +649,22 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
             float dB = g.perfShape == 1 ? psdv_sd_bh(xR, hy, pw, ph) : psdv_sd_roundrect(xR, hy, pw, ph, ps_min(g.perfR * sc, 0.5f * ps_min(pw, ph)));
             dPerf = ps_min(dA, dB);
         }
+        // irregular, slightly torn outline of the punched hole: a fixed part (the punch)
+        // and a part that changes from frame to frame; the light follows it
+        float pirr = ps_max(p.perfIrregularity, 0.0f) * 0.001f;
+        if (pirr > 0.0f && ps_abs(dPerf) < 4.0f * pirr + 0.15f * ph) {
+            float useBn = (both && dPerf < dA) ? 1.0f : 0.0f;
+            float hx = useBn > 0.5f ? xx + pxL : xL;
+            float hid = ps_floor(rel + 0.5f) * 2.0f + useBn;
+            float sc2 = 0.10f * ph;
+            float u = hx / sc2 + hid * 7.31f, v = hy / sc2;
+            float st = psdv_noise2(u, v, 1201) + 0.5f * psdv_noise2(u * 2.7f + 3.3f, v * 2.7f - 1.1f, 1202);
+            int fs = 1301 + T * 17;
+            float mv = psdv_noise2(u, v, fs) + 0.5f * psdv_noise2(u * 2.7f + 3.3f, v * 2.7f - 1.1f, fs + 1);
+            float n = (ps_lerp(st, mv, ps_sat(p.edgeIrrMotion)) - 0.75f) * 1.6f;
+            dPerf = dPerf + n * pirr;
+            dA = dA + n * pirr;
+        }
         float aa = 0.6f * mmPerPx;
         hole = (1.0f - ps_smooth(-aa, aa, dPerf)) * ps_sat(p.perfOpacity);
         if (p.perfStyle == 0) E = E * (1.0f - hole);                                   // dark hole
@@ -662,51 +678,66 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
         // halates into the emulsion and base around it. In a negative scan the hole
         // itself is black and the edge glows: white core, orange glow, red halo.
         // It is never static: intensity and the hot side change from frame to frame.
-        if (p.leakOn) {
+        if (p.leakOn && p.perfLightOpacity > 0.0f) {
+            // Three layers, as in a backlit negative scan (reference: Dehancer Overscan):
+            //   rim  - thin warm-white line right on the cut edge, almost all around;
+            //   glow - orange, medium width, leaning towards one side;
+            //   halo - wide, cool blue, leaning further (blue scatters more) and weaker.
+            // Leaning = the halo is the hole outline shifted by a small offset, so one
+            // side glows, the opposite side stays clean. The hole itself stays black.
             int useB = (both && dPerf < dA) ? 1 : 0;
             float rx = useB ? xx + pxL : xL;                      // position relative to the hole centre
             float rxs = useB ? -rx : rx;                          // mirrored for the right-hand hole
             float d = dPerf;
             float holeId = ps_floor(rel + 0.5f) * 2.0f + (float)useB;
             int ls = 300 + p.leakSeed * 131;
-            float rimW = 0.0045f * ph * ps_max(p.perfRim, 0.05f);
+            float rimW = 0.0040f * ph * ps_max(p.perfRim, 0.05f);
             float hal = ps_max(p.perfHalo, 0.05f);
-            float dout = ps_max(d, 0.0f), din = ps_max(-d, 0.0f);
-            // Gaussian fall-offs: the light must die out within a fraction of the hole
-            // height, otherwise (log-encoded) it washes over the whole film
-            float inner = ps_exp(-din / (0.6f * rimW));         // quick fall-off into the hole
-            float c1 = dout / rimW, g1 = dout / (0.016f * ph * hal), h1 = dout / (0.05f * ph * hal);
-            float core = ps_exp(-c1 * c1) * inner;
-            float glow = ps_exp(-g1 * g1) * inner;
-            float halo = ps_exp(-h1 * h1) * inner;
-            // variation over time: slow drift mixed with frame-to-frame changes
+            float din = ps_max(-d, 0.0f);
+            float inner = ps_exp(-din / (0.5f * rimW));          // the hole stays black
+
+            // ---- time: slow drift mixed with frame-to-frame changes, per hole
             float sp = ps_sat(p.perfSpeed), va = ps_sat(p.perfVariation);
             float tSlow = (float)T / (1.0f + 23.0f * (1.0f - sp));
             float n1 = psdv_noiseT(tSlow + holeId * 0.37f, 11, ls);
             float n2 = psdv_rand(T, (int)holeId + 1000, ls + 3);
-            float inten = 1.0f + va * 0.9f * (ps_lerp(n1, n2, sp) - 0.5f) * 2.0f;
-            // the hot side wanders around the hole
+            float inten = 1.0f + va * 0.8f * (ps_lerp(n1, n2, sp) - 0.5f) * 2.0f;
+            float wob = va * (1.2f * (psdv_noiseT(tSlow * 0.6f + holeId * 0.21f, 13, ls) - 0.5f)
+                              + 0.5f * sp * (psdv_rand(T, (int)holeId + 2000, ls + 4) - 0.5f));
+            float dirA = p.perfAngle * 0.01745329f + wob * 1.6f;
+            float dx = ps_cos(dirA), dy = ps_sin(dirA);
+            if (useB) dx = -dx;                                   // mirror the lean for the other side
+            float lean = ps_max(p.perfAsym, 0.0f);
+
+            // ---- rim: on the true edge, slightly stronger on the leaning side
+            float c1 = ps_max(d, 0.0f) / rimW;
             float ang = ps_atan2(hy / ph, rxs / pw);
-            float ph0 = 6.2831853f * (psdv_noiseT(tSlow * 0.5f + holeId * 0.11f, 13, ls) + va * 0.5f * n2);
-            float side = 0.5f + 0.5f * ps_cos(ang - ph0);
-            float ca = ps_cos(ang), sa = ps_sin(ang);                 // noise on a circle: no seam at +-pi
-            side = side * (0.75f + 0.5f * psdv_noise2(ca * 0.6f + 7.0f + holeId, sa * 0.6f + tSlow * 0.7f, ls + 5));
-            float asym = ps_sat(p.perfAsym);
-            float sideK = ps_lerp(1.0f, 0.03f + 2.2f * side * side, asym);
-            // organic unevenness along the rim (changes with the frame like the rest)
-            sideK = sideK * (0.65f + 0.7f * psdv_noise2(ca * 3.5f + 3.0f + holeId * 2.0f, sa * 3.5f + tSlow * 1.3f, ls + 7));
-            float k = ps_exp2(p.perfLightEV) * ps_max(inten, 0.0f) * sideK;
+            float ca = ps_cos(ang), sa = ps_sin(ang);
+            float facing = 0.5f + 0.5f * (ca * (useB ? -dx : dx) + sa * dy);   // 1 on the leaning side
+            float rim = ps_exp(-c1 * c1) * inner * ps_lerp(1.0f, 0.06f + 0.94f * facing * facing, ps_sat(lean));
+            rim = rim * (0.7f + 0.6f * psdv_noise2(ca * 3.5f + 3.0f + holeId * 2.0f, sa * 3.5f + tSlow * 1.3f, ls + 7));
+
+            // ---- glow: orange, anchored on the edge, only on the leaning side
+            float dout = ps_max(d, 0.0f);
+            float g1 = dout / (0.028f * ph * hal);
+            float fG = ps_lerp(1.0f, facing * facing * facing, ps_sat(lean));
+            float glow = (0.7f * ps_exp(-1.5f * g1) + 0.3f * ps_exp(-0.35f * g1)) * ps_exp(-0.06f * g1 * g1) * inner * fG;
+            glow = glow * (0.75f + 0.5f * psdv_noise2(ca * 1.2f + 9.0f + holeId, sa * 1.2f + tSlow * 0.8f, ls + 9));
+
+            // ---- cool halo: blue band a little away from the edge, rotated from the glow
+            float dirC = dirA + 1.4f;                             // blue sits more "below" the warm glow
+            float dcx = ps_cos(dirC), dcy = ps_sin(dirC);
+            float facingC = 0.5f + 0.5f * (ca * (useB ? -dcx : dcx) + sa * dcy);
+            float fC = ps_lerp(1.0f, ps_pow(facingC, 6.0f), ps_sat(lean));
+            float hz = (dout - 0.020f * ph * hal) / (0.040f * ph * hal);
+            float halo = ps_exp(-hz * hz) * fC * (1.0f - 0.85f * fG) * ps_smooth(-0.5f * rimW, 2.0f * rimW, d);   // not under the orange, never inside the hole
+
             ps3 coreC = P3(ps_max(p.coreR, 0.0f), ps_max(p.coreG, 0.0f), ps_max(p.coreB, 0.0f));
             ps3 glowC = P3(ps_max(p.glowR, 0.0f), ps_max(p.glowG, 0.0f), ps_max(p.glowB, 0.0f));
-            ps3 outC = P3(ps_max(p.outerR, 0.0f), ps_max(p.outerG, 0.0f), ps_max(p.outerB, 0.0f));
-            ps3 Lp = (coreC * (0.40f * core) + glowC * (0.32f * glow) + outC * (0.025f * halo)) * k;
-            // cool chromatic fringe just outside the rim, on the dim side
-            if (p.perfFringe > 0.0f) {
-                float fz = (dout - 1.6f * rimW) / (0.9f * rimW);
-                float fr = ps_exp(-fz * fz) * inner * (1.0f - side);
-                Lp = Lp + P3(0.20f, 0.42f, 1.0f) * (0.35f * p.perfFringe * fr * ps_exp2(p.perfLightEV));
-            }
-            E = E + Lp;
+            ps3 coolC = P3(ps_max(p.outerR, 0.0f), ps_max(p.outerG, 0.0f), ps_max(p.outerB, 0.0f));
+            float k = ps_exp2(p.perfLightEV) * ps_max(inten, 0.0f);
+            ps3 Lp = coreC * (0.80f * rim) + glowC * (0.90f * glow) + coolC * (0.09f * ps_max(p.perfFringe, 0.0f) * halo);
+            E = E + Lp * (k * ps_sat(p.perfLightOpacity) * ps_sat(p.perfOpacity));
         }
     }
     return psdv_encode(E, enc);
