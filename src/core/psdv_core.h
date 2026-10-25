@@ -729,28 +729,39 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
             float glowW = ps_sqrt((0.028f * ph * hal) * (0.028f * ph * hal) + pdef * pdef);
             float g1 = dout / glowW;
             float fG = ps_lerp(1.0f, facing * facing * facing, ps_sat(lean));
-            float glow = (0.7f * ps_exp(-1.5f * g1) + 0.3f * ps_exp(-0.35f * g1)) * ps_exp(-0.06f * g1 * g1) * inner * fG;
+            float glow = (0.8f * ps_exp(-1.5f * g1) + 0.2f * ps_exp(-0.45f * g1)) * ps_exp(-0.08f * g1 * g1) * inner * fG;
             glow = glow * (0.75f + 0.5f * psdv_noise2(ca * 1.2f + 9.0f + holeId, sa * 1.2f + tSlow * 0.8f, ls + 9));
 
             // ---- cool halo: blue band a little away from the edge, rotated from the glow
             float dirC = dirA + 1.4f;                             // blue sits more "below" the warm glow
             float dcx = ps_cos(dirC), dcy = ps_sin(dirC);
             float facingC = 0.5f + 0.5f * (ca * (useB ? -dcx : dcx) + sa * dcy);
-            float fC = ps_lerp(1.0f, ps_pow(facingC, 6.0f), ps_sat(lean));
+            float fC = ps_lerp(1.0f, ps_max(ps_pow(facingC, 6.0f), 0.35f * facing * facing * facing), ps_sat(lean));   // below, and far out on the glow side
             float bandW = ps_sqrt((0.040f * ph * hal) * (0.040f * ph * hal) + pdef * pdef);
-            float hz = (dout - 0.020f * ph * hal - 0.5f * pdef) / bandW;
-            float halo = ps_exp(-hz * hz) * fC * (1.0f - 0.85f * fG) * ps_smooth(-0.5f * rimW, 2.0f * rimW, d);   // not under the orange, never inside the hole
+            float hz = (dout - 0.035f * ph * hal - 0.5f * pdef) / bandW;
+            float halo = ps_exp(-hz * hz) * fC * (1.0f - ps_sat(4.0f * glow)) * ps_smooth(-0.5f * rimW, 2.0f * rimW, d);   // not under the orange, never inside the hole
 
             ps3 coreC = P3(ps_max(p.coreR, 0.0f), ps_max(p.coreG, 0.0f), ps_max(p.coreB, 0.0f));
             ps3 glowC = P3(ps_max(p.glowR, 0.0f), ps_max(p.glowG, 0.0f), ps_max(p.glowB, 0.0f));
             ps3 coolC = P3(ps_max(p.outerR, 0.0f), ps_max(p.outerG, 0.0f), ps_max(p.outerB, 0.0f));
             float k = ps_exp2(p.perfLightEV) * ps_max(inten, 0.0f);
-            ps3 Lp = coreC * (0.80f * rim * (rimW0 / rimW)) + glowC * (0.90f * glow * ps_sqrt(0.028f * ph * hal / glowW)) + coolC * (0.09f * ps_max(p.perfFringe, 0.0f) * halo);
+            ps3 Lp = coreC * (0.80f * rim * (rimW0 / rimW)) + glowC * (0.90f * glow * ps_sqrt(0.028f * ph * hal / glowW)) + coolC * (0.11f * ps_max(p.perfFringe, 0.0f) * halo);
             float amt = k * ps_sat(p.perfLightOpacity) * ps_sat(p.perfOpacity);
             Lp = Lp * amt;
+            // light saturation (around its own luminance) and a hot core: where the rim
+            // is brightest it burns towards white-yellow, like an over-exposed backlight
+            float lY = 0.2126f * Lp.x + 0.7152f * Lp.y + 0.0722f * Lp.z;
+            Lp = P3(lY, lY, lY) + (Lp - P3(lY, lY, lY)) * ps_max(p.perfSaturation, 0.0f);
+            Lp = P3(ps_max(Lp.x, 0.0f), ps_max(Lp.y, 0.0f), ps_max(Lp.z, 0.0f));
+            float hot = ps_sat(rim * (rimW0 / rimW) * amt * 0.8f) * ps_sat(p.perfHotCore);
+            Lp = ps_mix3(Lp, P3(1.0f, 0.92f, 0.70f) * ps_max(lY * 1.6f, 0.0f), hot * hot);
             // the light sits on unexposed film: where it is, the picture underneath goes
             // (it does not glow on top of the image)
             float lum = ps_max(Lp.x, ps_max(Lp.y, Lp.z));
+            // the light is exposure on the film: it gets the same emulsion grain as the
+            // picture (same stock, size, clumping, softness), so its colour breaks up
+            // like Dehancer's instead of looking like a smooth digital glow
+            if (p.grainOn && lum > 1.0e-4f) Lp = psdv_grain(Lp, xx, yy, T, mmPerPx, p);
             float occ = ps_sat(lum * 6.0f) * ps_sat(p.perfOpacity);
             E = E * (1.0f - occ) + Lp;
         }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0 - luce delle perforazioni con grana e colore più vivo
+- La luce delle perforazioni passa per **la stessa grana** del film (stock, dimensione, clumping, softness): il colore si rompe come nel frame Dehancer invece di essere un bagliore digitale liscio.
+- Nuovi controlli **Light Saturation** e **Hot Core** (la parte più luminosa del bordo brucia verso bianco-giallo, come un retroilluminatore sovraesposto).
+- Arancio più caldo e più stretto; la banda blu sta fuori dall'arancio (sotto e, debole, più lontano sul lato del bagliore), senza mescolarsi in viola.
+- Gli identificativi dei parametri della luce sono cambiati: sui nodi già esistenti la sezione riparte dai default (prima restavano valori salvati con significati vecchi).
+
 ## 1.5.0 - defocus delle perforazioni
 - **Perforation Defocus**: foro fuori fuoco, bordo morbido; la luce si allarga e si ammorbidisce mantenendo i colori.
 - Dove c'è la luce delle perforazioni l'immagine sottostante sparisce (la luce sta sulla pellicola non impressionata, non sopra l'immagine); dentro il foro l'immagine era già nera.

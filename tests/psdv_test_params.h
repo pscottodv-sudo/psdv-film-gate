@@ -19,9 +19,9 @@ inline void psdvDefaults(PsdvParams& p)
     p.grainOn = 1; p.emulsion = 1; p.rms = 8; p.grainIntensity = 1; p.grainSize = 1;
     p.shadowResponse = 1; p.midResponse = 1; p.highlightResponse = 1; p.colorGrain = 0.85f; p.negGamma = 0.6f; p.grainSoftness = 1.0f; p.grainClumping = 0.4f;
     p.leakOn = 1; p.perfLightEV = 0; p.perfRim = 1.3f; p.perfHalo = 1.3f;
-    p.coreR = 1.0f; p.coreG = 0.86f; p.coreB = 0.50f; p.glowR = 1.0f; p.glowG = 0.34f; p.glowB = 0.03f;
-    p.outerR = 0.10f; p.outerG = 0.40f; p.outerB = 1.0f;
-    p.perfFringe = 1.0f; p.perfVariation = 0.55f; p.perfSpeed = 0.6f; p.perfAsym = 1.0f; p.perfAngle = 190.0f; p.perfLightOpacity = 1.0f;
+    p.coreR = 1.0f; p.coreG = 0.86f; p.coreB = 0.50f; p.glowR = 1.0f; p.glowG = 0.30f; p.glowB = 0.09f;
+    p.outerR = 0.04f; p.outerG = 0.33f; p.outerB = 1.0f;
+    p.perfFringe = 1.0f; p.perfVariation = 0.55f; p.perfSpeed = 0.6f; p.perfAsym = 1.0f; p.perfAngle = 190.0f; p.perfLightOpacity = 1.0f; p.perfSaturation = 1.0f; p.perfHotCore = 0.7f;
 }
 
 #define FIELD_I(n) if (k == #n) { p.n = (int)v; return true; }
@@ -38,7 +38,7 @@ inline bool psdvSetParam(PsdvParams& p, const std::string& k, double v)
     FIELD_I(emulsion) FIELD_F(rms) FIELD_F(grainIntensity) FIELD_F(grainSize) FIELD_F(shadowResponse) FIELD_F(midResponse)
     FIELD_F(highlightResponse) FIELD_F(colorGrain) FIELD_F(negGamma) FIELD_F(grainSoftness) FIELD_F(grainClumping) FIELD_I(grainSeed) FIELD_I(leakOn) FIELD_F(perfLightEV) FIELD_F(perfRim) FIELD_F(perfHalo)
     FIELD_F(coreR) FIELD_F(coreG) FIELD_F(coreB) FIELD_F(glowR) FIELD_F(glowG) FIELD_F(glowB) FIELD_F(outerR) FIELD_F(outerG) FIELD_F(outerB)
-    FIELD_F(perfFringe) FIELD_F(perfVariation) FIELD_F(perfSpeed) FIELD_F(perfAsym) FIELD_F(perfAngle) FIELD_F(perfLightOpacity) FIELD_I(leakSeed)
+    FIELD_F(perfFringe) FIELD_F(perfVariation) FIELD_F(perfSpeed) FIELD_F(perfAsym) FIELD_F(perfAngle) FIELD_F(perfLightOpacity) FIELD_F(perfSaturation) FIELD_F(perfHotCore) FIELD_I(leakSeed)
     return false;
 }
 

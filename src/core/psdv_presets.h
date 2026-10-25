@@ -57,14 +57,14 @@ struct PsdvLeakPreset
 // the user: thin warm-white rim, orange glow leaning to one side, blue band below.
 static const PsdvLeakPreset kLeakPresets[] = {
     {"Custom",                 0, 0, 0,  0, 0, 0,  0, 0, 0,  0, 0, 0,  0, 0, 0, 0, 0},
-    {"Negative Scan Halation", 0.0f, 1.3f, 1.3f,  1.00f, 0.86f, 0.50f,  1.00f, 0.34f, 0.03f,  0.10f, 0.40f, 1.00f,  1.0f, 0.55f, 0.60f, 1.00f, 190.0f},
+    {"Negative Scan Halation", 0.0f, 1.3f, 1.3f,  1.00f, 0.86f, 0.50f,  1.00f, 0.30f, 0.09f,  0.04f, 0.33f, 1.00f,  1.0f, 0.55f, 0.60f, 1.00f, 190.0f},
     {"Soft Warm Glow",        -0.3f, 1.8f, 1.8f,  1.00f, 0.80f, 0.50f,  1.00f, 0.42f, 0.10f,  0.20f, 0.35f, 0.90f,  0.5f, 0.30f, 0.30f, 0.60f, 190.0f},
     {"Hot White Edge",         0.6f, 0.8f, 0.9f,  1.00f, 0.97f, 0.90f,  1.00f, 0.55f, 0.20f,  0.15f, 0.35f, 1.00f,  0.8f, 0.40f, 0.60f, 0.80f, 190.0f},
     {"Deep Red Burn",          0.4f, 1.2f, 2.0f,  1.00f, 0.55f, 0.20f,  0.90f, 0.18f, 0.02f,  0.10f, 0.20f, 0.80f,  0.4f, 0.70f, 0.50f, 1.00f, 200.0f},
-    {"Subtle Edge",           -1.0f, 0.8f, 0.8f,  1.00f, 0.86f, 0.55f,  1.00f, 0.38f, 0.06f,  0.10f, 0.40f, 1.00f,  0.6f, 0.25f, 0.30f, 0.80f, 190.0f},
-    {"Unstable Backlight",     0.3f, 1.0f, 1.3f,  1.00f, 0.86f, 0.50f,  1.00f, 0.34f, 0.03f,  0.10f, 0.40f, 1.00f,  1.0f, 1.00f, 1.00f, 1.00f, 190.0f},
+    {"Subtle Edge",           -1.0f, 0.8f, 0.8f,  1.00f, 0.86f, 0.55f,  1.00f, 0.38f, 0.06f,  0.04f, 0.33f, 1.00f,  0.6f, 0.25f, 0.30f, 0.80f, 190.0f},
+    {"Unstable Backlight",     0.3f, 1.0f, 1.3f,  1.00f, 0.86f, 0.50f,  1.00f, 0.34f, 0.03f,  0.04f, 0.33f, 1.00f,  1.0f, 1.00f, 1.00f, 1.00f, 190.0f},
     {"Strong Blue Fringe",     0.0f, 1.0f, 1.4f,  1.00f, 0.90f, 0.62f,  1.00f, 0.40f, 0.06f,  0.08f, 0.30f, 1.00f,  2.0f, 0.45f, 0.60f, 1.00f, 190.0f},
-    {"Even Rim (no lean)",     0.0f, 1.2f, 1.0f,  1.00f, 0.86f, 0.50f,  1.00f, 0.36f, 0.04f,  0.10f, 0.40f, 1.00f,  0.3f, 0.40f, 0.50f, 0.00f, 190.0f},
+    {"Even Rim (no lean)",     0.0f, 1.2f, 1.0f,  1.00f, 0.86f, 0.50f,  1.00f, 0.36f, 0.04f,  0.04f, 0.33f, 1.00f,  0.3f, 0.40f, 0.50f, 0.00f, 190.0f},
 };
 static const int kLeakPresetCount = sizeof(kLeakPresets) / sizeof(kLeakPresets[0]);
 

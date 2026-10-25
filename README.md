@@ -1,4 +1,4 @@
-# psdv-film gate emulation 1.5
+# psdv-film gate emulation 1.6
 
 Plugin **OpenFX** per **DaVinci Resolve su macOS** (rendering **Metal**, bundle universale Apple Silicon + Intel) che emula la finestra di ripresa di una cinepresa: gate e perforazioni, gate weave, grana di emulsione e luce delle perforazioni. Ogni sezione si attiva da sola, ha i suoi preset e un controllo manuale completo. L'interfaccia è in inglese.
 

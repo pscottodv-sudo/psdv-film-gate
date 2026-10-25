@@ -84,6 +84,8 @@ struct PsdvParams
     float perfAsym;       // how far the glow leans to one side (offset of the halos)
     float perfAngle;      // direction the light leans to, degrees (0 = right, 90 = up)
     float perfLightOpacity; // overall mix 0..1
+    float perfSaturation;   // saturation of the light (1 = colours as picked)
+    float perfHotCore;      // how much the brightest part of the rim burns to white-yellow
     int   leakSeed;
 
     // ---- per-frame values, filled by psdv_prepare() on the host (not UI parameters)

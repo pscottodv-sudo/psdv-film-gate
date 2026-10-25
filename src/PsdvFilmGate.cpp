@@ -22,7 +22,7 @@
     "Grain presets: only Double-X 5222 (RMS 14) and the Ektachrome/E100 preset (RMS 8) use published values; the others are estimates."
 #define kPluginIdentifier "it.psdv.filmgate"
 #define kPluginVersionMajor 1
-#define kPluginVersionMinor 5
+#define kPluginVersionMinor 6
 
 // ------------------------------------------------------------------ parameter names
 // input
@@ -95,26 +95,28 @@
 #define P_GRAIN_CLUMP "grainClumping"
 #define P_GRAIN_SEED "grainSeed"
 // leaks
-#define P_LEAK_PRESET "perforationLightPreset"
-#define P_PL_EV "perforationLightExposure"
-#define P_PL_RIM "perforationRimWidth"
-#define P_PL_HALO "perforationGlowSize"
-#define P_PL_CORE "perforationCoreColour"
-#define P_PL_GLOW "perforationGlowColour"
-#define P_PL_OUTER "perforationHaloColour"
-#define P_PL_FRINGE "perforationFringe"
-#define P_PL_VAR "perforationLightVariation"
-#define P_PL_SPEED "perforationLightSpeed"
-#define P_PL_ASYM "perforationLightAsymmetry"
-#define P_PL_ANGLE "perforationLightDirection"
-#define P_PL_OPACITY "perforationLightOpacity"
-#define P_LEAK_SEED "leakSeed"
+#define P_LEAK_PRESET "perfLightPreset"
+#define P_PL_EV "perfLightExposure"
+#define P_PL_RIM "perfLightRimWidth"
+#define P_PL_HALO "perfLightGlowSize"
+#define P_PL_CORE "perfLightRimColour"
+#define P_PL_GLOW "perfLightGlowColour"
+#define P_PL_OUTER "perfLightCoolBandColour"
+#define P_PL_FRINGE "perfLightCoolBand"
+#define P_PL_VAR "perfLightVariation"
+#define P_PL_SPEED "perfLightVariationSpeed"
+#define P_PL_ASYM "perfLightLean"
+#define P_PL_ANGLE "perfLightDirection"
+#define P_PL_OPACITY "perfLightOpacity"
+#define P_PL_SAT "perfLightSaturation"
+#define P_PL_HOT "perfLightHotCore"
+#define P_LEAK_SEED "perfLightSeed"
 
 static const char* kGateSectionParams[] = {P_FORMAT, P_FRAMING, P_FRAME_SIZE, P_NEIGHBORS, P_SPACING, P_PERF_ON, P_PERF_STYLE,
                                            P_EDGE_SOFT, P_EDGE_DARK, P_EDGE_DARK_W, P_CORNER, P_EDGE_IRR, P_EDGE_IRR_SIZE, P_EDGE_IRR_MOTION, P_DEFOCUS, P_DUST, P_FIBRES, P_GATE_HAIR, P_SCRATCHES};
 static const char* kWeaveSectionParams[] = {P_WEAVE_H, P_WEAVE_V, P_WEAVE_RANDOM, P_WEAVE_CYCLE, P_ROTATION, P_SCAN_JITTER, P_FLICKER, P_FLICKER_RANDOM};
 static const char* kGrainSectionParams[] = {P_EMULSION, P_RMS, P_GRAIN_SIZE, P_COLOR_GRAIN, P_NEG_GAMMA, P_GRAIN_SOFT, P_GRAIN_CLUMP, P_SHADOW, P_MID, P_HIGH};
-static const char* kLeakSectionParams[] = {P_PL_EV, P_PL_RIM, P_PL_HALO, P_PL_CORE, P_PL_GLOW, P_PL_OUTER, P_PL_FRINGE, P_PL_VAR, P_PL_SPEED, P_PL_ASYM, P_PL_ANGLE};
+static const char* kLeakSectionParams[] = {P_PL_EV, P_PL_RIM, P_PL_HALO, P_PL_CORE, P_PL_GLOW, P_PL_OUTER, P_PL_FRINGE, P_PL_VAR, P_PL_SPEED, P_PL_ASYM, P_PL_ANGLE, P_PL_SAT, P_PL_HOT};
 
 static bool inList(const std::string& n, const char* const* list, size_t count)
 {
@@ -278,6 +280,8 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
     p.perfAsym = (float)dbl(P_PL_ASYM, t);
     p.perfAngle = (float)dbl(P_PL_ANGLE, t);
     p.perfLightOpacity = (float)dbl(P_PL_OPACITY, t);
+    p.perfSaturation = (float)dbl(P_PL_SAT, t);
+    p.perfHotCore = (float)dbl(P_PL_HOT, t);
     p.leakSeed = integer(P_LEAK_SEED, t);
 }
 
@@ -631,8 +635,8 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     {
         struct { const char* n; const char* l; const char* h; double r, g, b; } cols[] = {
             {P_PL_CORE, "Rim Colour", "Colour of the thin line right on the hole edge.", 1.0, 0.86, 0.50},
-            {P_PL_GLOW, "Glow Colour", "Colour of the glow on the leaning side.", 1.0, 0.34, 0.03},
-            {P_PL_OUTER, "Cool Band Colour", "Colour of the band a little away from the edge, opposite the glow.", 0.10, 0.40, 1.0}};
+            {P_PL_GLOW, "Glow Colour", "Colour of the glow on the leaning side.", 1.0, 0.30, 0.09},
+            {P_PL_OUTER, "Cool Band Colour", "Colour of the band a little away from the edge, opposite the glow.", 0.04, 0.33, 1.0}};
         for (auto& c : cols) {
             RGBParamDescriptor* d = desc.defineRGBParam(c.n);
             d->setLabels(c.l, c.l, c.l);
@@ -642,6 +646,8 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
             page->addChild(*d);
         }
     }
+    dparam(desc, page, gL, P_PL_SAT, "Light Saturation", "Saturation of the perforation light (1 = colours as picked).", 1.0, 0.0, 3.0, 0.0, 2.5);
+    dparam(desc, page, gL, P_PL_HOT, "Hot Core", "The brightest part of the rim burns towards white-yellow, like an over-exposed backlight.", 0.7, 0.0, 1.0, 0.0, 1.0);
     dparam(desc, page, gL, P_PL_FRINGE, "Cool Band", "Strength of the blue band (0 = none).", 1.0, 0.0, 4.0, 0.0, 2.0);
     dparam(desc, page, gL, P_PL_ASYM, "Lean", "0 = the same light all around the hole, 1 = the light sits on one side and the opposite edge stays clean.", 1.0, 0.0, 1.0, 0.0, 1.0);
     dparam(desc, page, gL, P_PL_ANGLE, "Light Direction (°)", "Side the glow leans to: 0 right, 90 up, 180 left, 270 down. The blue band sits 80° further round. Mirrored for holes on the other side.", 190.0, 0.0, 360.0, 0.0, 360.0);
