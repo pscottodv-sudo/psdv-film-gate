@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0 - anello "bruciato" come Dehancer
+- Profilo della luce delle perforazioni rifatto misurando un fotogramma Dehancer (valori Rec.709 riportati in luce lineare): anello crema quasi bruciato sul bordo, banda arancio piatta e satura che finisce di colpo (~6% dell'altezza del foro), banda blu più lontana sotto il foro.
+- Arancio più deciso sul lato verso cui pende la luce, quasi assente sul lato opposto.
+- **Input Encoding** ora parte da **Rec.709 (Gamma 2.4)**, il default dei progetti Resolve. Con la timeline in Rec.709 e il plugin su DaVinci Intermediate, luce e grana venivano codificate in log e apparivano spente e senza contrasto. Con una timeline DaVinci Wide Gamut / Intermediate scegli DaVinci Intermediate.
+
 ## 1.6.0 - luce delle perforazioni con grana e colore più vivo
 - La luce delle perforazioni passa per **la stessa grana** del film (stock, dimensione, clumping, softness): il colore si rompe come nel frame Dehancer invece di essere un bagliore digitale liscio.
 - Nuovi controlli **Light Saturation** e **Hot Core** (la parte più luminosa del bordo brucia verso bianco-giallo, come un retroilluminatore sovraesposto).

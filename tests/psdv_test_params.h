@@ -19,8 +19,8 @@ inline void psdvDefaults(PsdvParams& p)
     p.grainOn = 1; p.emulsion = 1; p.rms = 8; p.grainIntensity = 1; p.grainSize = 1;
     p.shadowResponse = 1; p.midResponse = 1; p.highlightResponse = 1; p.colorGrain = 0.85f; p.negGamma = 0.6f; p.grainSoftness = 1.0f; p.grainClumping = 0.4f;
     p.leakOn = 1; p.perfLightEV = 0; p.perfRim = 1.3f; p.perfHalo = 1.3f;
-    p.coreR = 1.0f; p.coreG = 0.86f; p.coreB = 0.50f; p.glowR = 1.0f; p.glowG = 0.30f; p.glowB = 0.09f;
-    p.outerR = 0.04f; p.outerG = 0.33f; p.outerB = 1.0f;
+    p.coreR = 1.0f; p.coreG = 0.92f; p.coreB = 0.62f; p.glowR = 1.0f; p.glowG = 0.32f; p.glowB = 0.06f;
+    p.outerR = 0.12f; p.outerG = 0.38f; p.outerB = 1.0f;
     p.perfFringe = 1.0f; p.perfVariation = 0.55f; p.perfSpeed = 0.6f; p.perfAsym = 1.0f; p.perfAngle = 190.0f; p.perfLightOpacity = 1.0f; p.perfSaturation = 1.0f; p.perfHotCore = 0.7f;
 }
 

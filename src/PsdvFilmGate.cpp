@@ -22,7 +22,7 @@
     "Grain presets: only Double-X 5222 (RMS 14) and the Ektachrome/E100 preset (RMS 8) use published values; the others are estimates."
 #define kPluginIdentifier "it.psdv.filmgate"
 #define kPluginVersionMajor 1
-#define kPluginVersionMinor 6
+#define kPluginVersionMinor 7
 
 // ------------------------------------------------------------------ parameter names
 // input
@@ -524,8 +524,8 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     GroupParamDescriptor* gIn = group(desc, page, "grpInput", "Input", true);
     static const char* enc[] = {"DaVinci Intermediate", "Rec.709 (Gamma 2.4)", "Linear"};
     cparam(desc, page, gIn, P_ENCODING, "Input Encoding",
-           "How the incoming image is encoded. With a DaVinci Wide Gamut / Intermediate pipeline choose DaVinci Intermediate.",
-           enc, 3, 0);
+           "How the incoming image is encoded: must match the timeline colour space. Default Rec.709 (Resolve's default project); with a DaVinci Wide Gamut / Intermediate timeline choose DaVinci Intermediate, otherwise light and grain look flat.",
+           enc, 3, 1);
 
     // ---------------- film gate & perforations
     GroupParamDescriptor* gG = group(desc, page, "grpGate", "Film Gate & Perforations", true);
@@ -634,9 +634,9 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     dparam(desc, page, gL, P_PL_HALO, "Glow Size", "Size of the orange glow and of the blue band.", 1.3, 0.05, 10.0, 0.2, 4.0);
     {
         struct { const char* n; const char* l; const char* h; double r, g, b; } cols[] = {
-            {P_PL_CORE, "Rim Colour", "Colour of the thin line right on the hole edge.", 1.0, 0.86, 0.50},
-            {P_PL_GLOW, "Glow Colour", "Colour of the glow on the leaning side.", 1.0, 0.30, 0.09},
-            {P_PL_OUTER, "Cool Band Colour", "Colour of the band a little away from the edge, opposite the glow.", 0.04, 0.33, 1.0}};
+            {P_PL_CORE, "Rim Colour", "Colour of the thin line right on the hole edge.", 1.0, 0.92, 0.62},
+            {P_PL_GLOW, "Glow Colour", "Colour of the glow on the leaning side.", 1.0, 0.32, 0.06},
+            {P_PL_OUTER, "Cool Band Colour", "Colour of the band a little away from the edge, opposite the glow.", 0.12, 0.38, 1.0}};
         for (auto& c : cols) {
             RGBParamDescriptor* d = desc.defineRGBParam(c.n);
             d->setLabels(c.l, c.l, c.l);
