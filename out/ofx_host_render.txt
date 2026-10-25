@@ -1,0 +1,7 @@
+plugin: it.psdv.filmgate  version 1.8  grouping: PSDV
+frame 0 needs Source [0, 0]
+render 0 -> status 0, fetched source times: 0
+frame 24 needs Source [24, 24]
+render 24 -> status 0, fetched source times: 24
+frame 47 needs Source [47, 47]
+render 47 -> status 0, fetched source times: 47

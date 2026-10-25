@@ -1,0 +1,3 @@
+# GPU test
+
+**GPU backend unavailable:** MTLCreateSystemDefaultDevice returned nil (no Metal device on this machine)
