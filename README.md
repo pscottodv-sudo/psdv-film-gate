@@ -1,4 +1,4 @@
-# psdv-film gate emulation 1.1
+# psdv-film gate emulation 1.2
 
 Plugin **OpenFX** per **DaVinci Resolve su macOS** (rendering **Metal**, bundle universale Apple Silicon + Intel) che emula la finestra di ripresa di una cinepresa: gate e perforazioni, gate weave, grana di emulsione e light leaks. Ogni sezione si attiva da sola, ha i suoi preset e un controllo manuale completo. L'interfaccia è in inglese.
 
@@ -104,6 +104,8 @@ Ogni sezione ha **Enable**, un menu **Preset** e i controlli manuali. Scegliere 
 | Image In Gate, Image Zoom, Image Pan X/Y | posizione e zoom del video dentro la finestra |
 | Frames Above / Below, Frame Spacing | fotogrammi vicini ripetuti (default, veloce) / veri (più lento: Resolve decodifica 3 frame) / neri, e distanza tra fotogrammi |
 | Gate Edge Softness / Darkness / Darkness Width, Corner Roundness, Optical Softness | bordo della finestra e morbidezza ottica |
+| Edge Irregularity (µm), Irregularity Size, Irregularity Motion | rientranze e sporgenze del contorno del gate; Motion 0 = contorno fisso, 1 = cambia a ogni fotogramma |
+| Gate Defocus | gate fuori fuoco: bordi sfumati, angoli arrotondati e più scuri |
 | Show Perforations, Perforation Style / Side / Size / Opacity | fori scuri, retroilluminati o solo contorno |
 | Dust, Fibres & Hairs, Hair In Gate, Scratches, Dirt Polarity | sporco legato alla pellicola, pelo fermo nel gate, righe |
 

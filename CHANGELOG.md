@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 - bordo del gate vivo e defocus
+- **Edge Irregularity (µm)**, **Irregularity Size**, **Irregularity Motion**: piccole rientranze e sporgenze lungo il contorno del gate. Una parte è fissa (appartiene al gate), una parte cambia da un fotogramma all'altro. Non è weave e non è flicker: si muove solo il contorno. Anche gli aloni dei light leaks seguono il contorno irregolare.
+- **Gate Defocus**: gate fuori fuoco, con bordi sfumati e angoli arrotondati e più scuri, come la sfocatura reale di un'apertura rettangolare (profilo separabile gaussiano). La sfumatura è centrata sul contorno anche nella visualizzazione log/gamma.
+- Il bordo morbido ora sfuma l'immagine invece di tagliarla dove finisce la clip; la sfumatura può attraversare la linea tra due fotogrammi, quindi vengono calcolati entrambi i gate vicino al confine.
+- *Fit Gate To Screen* tiene conto del bordo morbido e irregolare: niente tocca il bordo dello schermo.
+- Preset del gate aggiornati con valori di irregolarità e defocus.
+
 ## 1.1.0 - velocità e grana
 **Velocità**
 - I fotogrammi sopra e sotto ora sono di default **Repeat Current Frame (fast)**. *Real Previous / Next* chiede a Resolve due fotogrammi in più per ogni frame, quindi fino a 3 volte la decodifica e il lavoro dei nodi a monte: era la causa principale del playback a scatti. Usalo per il render finale.

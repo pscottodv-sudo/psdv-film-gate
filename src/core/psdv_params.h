@@ -31,6 +31,10 @@ struct PsdvParams
     float edgeDarkWidth;  // width of that darkening, fraction of gate height
     float cornerRadius;   // multiplier of the gauge corner radius
     float opticalSoft;    // lens + emulsion softness multiplier
+    float edgeIrregularity; // bumps of the gate outline, micrometres
+    float edgeIrrSize;      // size of the bumps (multiplier)
+    float edgeIrrMotion;    // 0 = fixed outline, 1 = new outline every frame
+    float gateDefocus;      // out-of-focus gate: soft edges and rounded, darker corners
     int   perfOn;
     int   perfStyle;      // 0 dark hole, 1 backlit (scanner light), 2 outline
     int   perfSide;       // 0 gauge default, 1 left, 2 right, 3 both

@@ -438,39 +438,37 @@ PS_INLINE ps3 psdv_sample(PS_THREAD const SRC& s, int k, float su, float sv, flo
     return psdv_decode(acc * (1.0f / wsum), enc);
 }
 
-// =============================================================== the pixel
-template <class SRC>
-PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvParams& p, int px, int py)
+// Gate Defocus 1.0 = blur sigma of 1.5% of the gate height
+#define PSDV_DEFOCUS_MM 0.015f
+
+// Film millimetres per output pixel for the chosen framing. "Fit Gate To Screen"
+// keeps the whole gate visible including its soft / defocused / irregular edge.
+PS_INLINE float psdv_mm_per_px(PS_CONSTANT_REF PsdvParams& p, PsdvFormat g, float gateW, float gateH, float W, float H)
 {
-    PsdvFormat g = psdv_format(p.format);
-    float W = (float)p.width, H = (float)p.height;
-    float canvasAR = W / H;
+    float m;
+    if (!p.gateOn || p.gateFraming == 2) m = ps_min(gateW / W, gateH / H);         // picture fills the screen
+    else if (p.gateFraming == 1) {                                                  // whole gate visible
+        float pen = p.edgeSoftness * g.gateSoft;
+        float defo = ps_max(p.gateDefocus, 0.0f) * PSDV_DEFOCUS_MM * gateH;
+        float edge = 2.5f * ps_sqrt(0.25f * pen * pen + defo * defo) + 1.5f * ps_max(p.edgeIrregularity, 0.0f) * 0.001f;
+        m = ps_max((gateW + 2.0f * edge) / W, (gateH + 2.0f * edge) / H);
+    }
+    else m = gateH / (ps_max(p.frameSize, 0.05f) * H);                               // manual frame size
+    return m / ps_max(p.zoom, 0.01f);
+}
+
+// One frame slot of the strip: gate shadow + picture (+ grain, dirt) of frame T - slot.
+// Returns the picture already multiplied by the gate coverage; dGateOut = signed
+// distance to that slot's gate outline (mm, < 0 inside).
+template <class SRC>
+PS_INLINE ps3 psdv_slot(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvParams& p, PsdvFormat g, int slot, float xx, float yy,
+                        float mmPerPx, float pitch, float gateW, float gateH, float radius, float canvasAR, int bw,
+                        PS_THREAD float& dGateOut, PS_THREAD float& gxOut)
+{
     int T = p.frameIndex;
     int enc = p.encoding;
-    int bw = (p.grainOn && p.emulsion >= 2) ? 1 : 0;
-    float gateH = g.gateH;
-    float gateW = p.aspect > 0.0f ? g.gateH * p.aspect : g.gateW;
-    float radius = ps_min(g.gateR * ps_max(p.cornerRadius, 0.0f), 0.5f * ps_min(gateW, gateH));
-    float pitch = ps_max(g.pitch + p.frameSpacing * gateH, gateH);
+    float W = (float)p.width, H = (float)p.height;
     int gateOn = p.gateOn;
-
-    // ---- scale: film mm per output pixel
-    float mmPerPx;
-    if (!gateOn || p.gateFraming == 2) mmPerPx = ps_min(gateW / W, gateH / H);   // picture fills the screen
-    else if (p.gateFraming == 1) mmPerPx = ps_max(gateW / W, gateH / H);          // whole gate visible
-    else mmPerPx = gateH / (ps_max(p.frameSize, 0.05f) * H);                       // manual frame size
-    mmPerPx = mmPerPx / ps_max(p.zoom, 0.01f);
-
-    // ---- scanner jitter moves everything
-    float jit = p.weaveOn ? p.scanJitter * 0.001f : 0.0f;
-    float tjx = (psdv_rand(T, 401, 5 + p.weaveSeed) - 0.5f) * 3.4641f * jit;
-    float tjy = (psdv_rand(T, 409, 5 + p.weaveSeed) - 0.5f) * 3.4641f * jit;
-    float xs = ((float)px + 0.5f - 0.5f * W - p.posX * W) * mmPerPx - tjx;
-    float yy = ((float)py + 0.5f - 0.5f * H - p.posY * H) * mmPerPx - tjy;
-    float xx = xs + ((gateOn && p.centreOn == 0) || !gateOn ? g.gateCx : 0.0f);
-
-    // ---- frame slot: 0 current, +1 above = previous, -1 below = next
-    int slot = gateOn ? (int)ps_floor(yy / pitch + 0.5f) : 0;
     float yl = yy - (float)slot * pitch;
     int frame = T - slot;
     float yRoll = yl - (float)frame * pitch;
@@ -486,9 +484,42 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
     float gx = cr * rx + sr * ry, gy = -sr * rx + cr * ry;
 
     float pen = ps_max(p.edgeSoftness * g.gateSoft, 0.6f * mmPerPx);
-    float edgeIrr = (psdv_noise2(gy * 3.0f, gx * 3.0f, 777) - 0.5f) * 0.012f * p.edgeSoftness;
-    float dGate = gateOn ? psdv_sd_roundrect(gx + edgeIrr, gy - edgeIrr, gateW, gateH, radius) : -1.0e6f;
-    float inside = gateOn ? 1.0f - ps_smooth(-pen, pen, dGate) : 1.0f;
+    float defo = ps_max(p.gateDefocus, 0.0f) * PSDV_DEFOCUS_MM * gateH;   // defocus blur (sigma, mm)
+    float dGate = gateOn ? psdv_sd_roundrect(gx, gy, gateW, gateH, radius) : -1.0e6f;
+    // irregular outline: small bumps in and out along the edge (filed gate, emulsion
+    // build-up, dirt). The fixed part belongs to the gate, the moving part changes
+    // from frame to frame. Only evaluated near the edge.
+    float irrA = ps_max(p.edgeIrregularity, 0.0f) * 0.001f;
+    if (gateOn && irrA > 0.0f && ps_abs(dGate) < 3.0f * irrA + 4.0f * (pen + defo) + 0.05f) {
+        float sc = 0.22f * ps_max(p.edgeIrrSize, 0.05f);
+        float u = gx / sc, v = gy / sc;
+        float st = psdv_noise2(u, v, 777) + 0.5f * psdv_noise2(u * 2.3f + 5.1f, v * 2.3f - 1.7f, 778);
+        int fs = 991 + frame * 13;
+        float mv = psdv_noise2(u, v, fs) + 0.5f * psdv_noise2(u * 2.3f + 5.1f, v * 2.3f - 1.7f, fs + 1);
+        float n = (ps_lerp(st, mv, ps_sat(p.edgeIrrMotion)) - 0.75f) * 1.6f;   // about -1..1
+        dGate = dGate + n * irrA;                                             // + = edge moves inward
+    }
+    float inside = 1.0f;
+    if (gateOn) {
+        // Gaussian edge profile (long tail): with a compact smoothstep the fade
+        // ended abruptly, which shows as a hard line once the image is log encoded.
+        float sgE = ps_sqrt(0.25f * pen * pen + defo * defo);
+        float z = dGate * 0.70710678f / sgE;
+        inside = 0.5f - 0.5f * (z >= 0.0f ? psdv_erf(z) : -psdv_erf(-z));
+        if (defo > 0.0f) {
+            // Gaussian blur of a rectangle is separable: the product of the two edge
+            // profiles darkens and rounds the corners like a real defocused aperture.
+            float k = 0.70710678f / defo;
+            float ax = (0.5f * gateW - ps_abs(gx)) * k, ay = (0.5f * gateH - ps_abs(gy)) * k;
+            float px1 = 0.5f + 0.5f * (ax >= 0.0f ? psdv_erf(ax) : -psdv_erf(-ax));
+            float py1 = 0.5f + 0.5f * (ay >= 0.0f ? psdv_erf(ay) : -psdv_erf(-ay));
+            inside = inside * ps_max(px1, py1);
+        }
+        // Perceptual fade: the scan is viewed in a log/gamma encoding, where a linear
+        // Gaussian fade looks like the gate growing outwards. Cubing the coverage keeps
+        // the visible transition centred on the gate outline.
+        inside = inside * inside * inside;
+    }
 
     // ---- which picture is in this slot
     int k = 1;
@@ -520,10 +551,19 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
             srcPerMMx = W / spanX / iz; srcPerMMy = H / spanY / iz;
         }
         float letter = (su < 0.0f || su > 1.0f || sv < 0.0f || sv > 1.0f) ? 0.0f : 1.0f;
+        // Fill Gate: the clip covers the gate exactly; its border pixels are extended so
+        // the soft / defocused / irregular gate edge fades the picture instead of the
+        // picture being cut sharply where the clip ends.
+        if (gateOn && p.imageFit == 0 && p.imageZoom >= 1.0f) letter = 1.0f;
         float blurMM = gateOn ? 0.0045f * g.softK * ps_max(p.opticalSoft, 0.0f) : 0.0f;   // gate section off = no gate softness
         float aaY = 0.5f * srcPerMMy * mmPerPx, aaX = 0.5f * srcPerMMx * mmPerPx;
         float sgy = ps_sqrt(blurMM * blurMM * srcPerMMy * srcPerMMy + (aaY > 0.5f ? aaY * aaY : 0.0f));
         float sgx = ps_sqrt(blurMM * blurMM * srcPerMMx * srcPerMMx + (aaX > 0.5f ? aaX * aaX : 0.0f));
+        // beyond the clip border (under a soft gate edge) the border pixels are
+        // extended; blur them across the stretch direction so they do not streak
+        float ox = ps_max(ps_max(-su, su - 1.0f), 0.0f) * W, oy = ps_max(ps_max(-sv, sv - 1.0f), 0.0f) * H;
+        sgx = sgx + 0.5f * oy;
+        sgy = sgy + 0.5f * ox;
         E = psdv_sample(s, k, ps_sat(su), ps_sat(sv), sgx, sgy, enc);
         if (bw) { float l = 0.2126f * E.x + 0.7152f * E.y + 0.0722f * E.z; E = P3(l, l, l); }
         if (p.weaveOn) E = E * ps_exp2(slot >= -1 && slot <= 1 ? p.flick[slot + 1] : psdv_flicker(frame, p));
@@ -545,6 +585,61 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
         E = ps_mix3(E, reversal ? P3(0.55f, 0.75f, 0.95f) : P3(0.0f, 0.0f, 0.0f), scr * 0.8f);
         pic = inside * letter;
         E = E * pic;
+    }
+    dGateOut = dGate;
+    gxOut = gx;
+    return E;
+
+}
+
+// =============================================================== the pixel
+template <class SRC>
+PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvParams& p, int px, int py)
+{
+    PsdvFormat g = psdv_format(p.format);
+    float W = (float)p.width, H = (float)p.height;
+    float canvasAR = W / H;
+    int T = p.frameIndex;
+    int enc = p.encoding;
+    int bw = (p.grainOn && p.emulsion >= 2) ? 1 : 0;
+    float gateH = g.gateH;
+    float gateW = p.aspect > 0.0f ? g.gateH * p.aspect : g.gateW;
+    float radius = ps_min(g.gateR * ps_max(p.cornerRadius, 0.0f), 0.5f * ps_min(gateW, gateH));
+    float pitch = ps_max(g.pitch + p.frameSpacing * gateH, gateH);
+    int gateOn = p.gateOn;
+
+    // ---- scale: film mm per output pixel
+    float mmPerPx = psdv_mm_per_px(p, g, gateW, gateH, W, H);
+
+    // ---- scanner jitter moves everything
+    float jit = p.weaveOn ? p.scanJitter * 0.001f : 0.0f;
+    float tjx = (psdv_rand(T, 401, 5 + p.weaveSeed) - 0.5f) * 3.4641f * jit;
+    float tjy = (psdv_rand(T, 409, 5 + p.weaveSeed) - 0.5f) * 3.4641f * jit;
+    float xs = ((float)px + 0.5f - 0.5f * W - p.posX * W) * mmPerPx - tjx;
+    float yy = ((float)py + 0.5f - 0.5f * H - p.posY * H) * mmPerPx - tjy;
+    float xx = xs + ((gateOn && p.centreOn == 0) || !gateOn ? g.gateCx : 0.0f);
+
+    // ---- frame slot: 0 current, +1 above = previous, -1 below = next
+    int slot = gateOn ? (int)ps_floor(yy / pitch + 0.5f) : 0;
+    float yl = yy - (float)slot * pitch;
+    int frame = T - slot;
+    float yRoll = yl - (float)frame * pitch;
+    float dGate, gx;
+    ps3 E = psdv_slot(s, p, g, slot, xx, yy, mmPerPx, pitch, gateW, gateH, radius, canvasAR, bw, dGate, gx);
+    // a soft / defocused / irregular gate edge can reach across the frame line:
+    // add the neighbouring slot when this pixel is within reach of it
+    if (gateOn) {
+        float pen = ps_max(p.edgeSoftness * g.gateSoft, 0.6f * mmPerPx);
+        float defo = ps_max(p.gateDefocus, 0.0f) * PSDV_DEFOCUS_MM * gateH;
+        float reach = 4.0f * ps_sqrt(0.25f * pen * pen + defo * defo) + 3.0f * ps_max(p.edgeIrregularity, 0.0f) * 0.001f
+                    + (p.weaveOn ? 0.004f * (p.weaveV + p.scanJitter) : 0.0f);
+        // distance from this pixel to the outline of the adjacent slot's gate
+        if (pitch - ps_abs(yl) - 0.5f * gateH < reach) {
+            float d2, gx2;
+            int s2 = slot + (yl > 0.0f ? 1 : -1);
+            E = E + psdv_slot(s, p, g, s2, xx, yy, mmPerPx, pitch, gateW, gateH, radius, canvasAR, bw, d2, gx2);
+            dGate = ps_min(dGate, d2);
+        }
     }
 
     // ---- perforations (always on the film, they do not weave with the picture)
@@ -638,11 +733,7 @@ inline void psdv_neighbors_visible(const PsdvParams& p, bool& above, bool& below
     float gateH = g.gateH;
     float gateW = p.aspect > 0.0f ? g.gateH * p.aspect : g.gateW;
     float pitch = ps_max(g.pitch + p.frameSpacing * gateH, gateH);
-    float mmPerPx;
-    if (p.gateFraming == 2) mmPerPx = ps_min(gateW / W, gateH / H);
-    else if (p.gateFraming == 1) mmPerPx = ps_max(gateW / W, gateH / H);
-    else mmPerPx = gateH / (ps_max(p.frameSize, 0.05f) * H);
-    mmPerPx = mmPerPx / ps_max(p.zoom, 0.01f);
+    float mmPerPx = psdv_mm_per_px(p, g, gateW, gateH, W, H);
     // weave, jitter and the soft gate edge can pull a neighbour in: generous margin
     float margin = 0.004f * (p.weaveOn ? (p.weaveV + p.scanJitter + 1.0f) : 1.0f) + 0.05f * gateH;
     float yTop = (0.5f * H - p.posY * H) * mmPerPx + margin;

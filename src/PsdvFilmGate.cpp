@@ -22,7 +22,7 @@
     "Grain presets: only Double-X 5222 (RMS 14) and the Ektachrome/E100 preset (RMS 8) use published values; the others are estimates."
 #define kPluginIdentifier "it.psdv.filmgate"
 #define kPluginVersionMajor 1
-#define kPluginVersionMinor 1
+#define kPluginVersionMinor 2
 
 // ------------------------------------------------------------------ parameter names
 // input
@@ -49,6 +49,10 @@
 #define P_EDGE_DARK "edgeDarkness"
 #define P_EDGE_DARK_W "edgeDarkWidth"
 #define P_CORNER "cornerRadius"
+#define P_EDGE_IRR "edgeIrregularity"
+#define P_EDGE_IRR_SIZE "irregularitySize"
+#define P_EDGE_IRR_MOTION "irregularityMotion"
+#define P_DEFOCUS "gateDefocus"
 #define P_OPTICAL "opticalSoftness"
 #define P_PERF_ON "showPerforations"
 #define P_PERF_STYLE "perforationStyle"
@@ -103,7 +107,7 @@
 #define P_LEAK_SEED "leakSeed"
 
 static const char* kGateSectionParams[] = {P_FORMAT, P_FRAMING, P_FRAME_SIZE, P_NEIGHBORS, P_SPACING, P_PERF_ON, P_PERF_STYLE,
-                                           P_EDGE_SOFT, P_EDGE_DARK, P_EDGE_DARK_W, P_CORNER, P_DUST, P_FIBRES, P_GATE_HAIR, P_SCRATCHES};
+                                           P_EDGE_SOFT, P_EDGE_DARK, P_EDGE_DARK_W, P_CORNER, P_EDGE_IRR, P_EDGE_IRR_SIZE, P_EDGE_IRR_MOTION, P_DEFOCUS, P_DUST, P_FIBRES, P_GATE_HAIR, P_SCRATCHES};
 static const char* kWeaveSectionParams[] = {P_WEAVE_H, P_WEAVE_V, P_WEAVE_RANDOM, P_WEAVE_CYCLE, P_ROTATION, P_SCAN_JITTER, P_FLICKER, P_FLICKER_RANDOM};
 static const char* kGrainSectionParams[] = {P_EMULSION, P_RMS, P_GRAIN_SIZE, P_COLOR_GRAIN, P_NEG_GAMMA, P_GRAIN_SOFT, P_GRAIN_CLUMP, P_SHADOW, P_MID, P_HIGH};
 static const char* kLeakSectionParams[] = {P_LEAK_OPACITY, P_LEAK_BLEND, P_LEAK_COLOR, P_LEAK_FREQ, P_LEAK_SPREAD, P_PERF_GLOW, P_EDGE_GLOW, P_FLARES, P_BURN};
@@ -211,6 +215,10 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
     p.edgeDarkness = (float)dbl(P_EDGE_DARK, t);
     p.edgeDarkWidth = (float)dbl(P_EDGE_DARK_W, t);
     p.cornerRadius = (float)dbl(P_CORNER, t);
+    p.edgeIrregularity = (float)dbl(P_EDGE_IRR, t);
+    p.edgeIrrSize = (float)dbl(P_EDGE_IRR_SIZE, t);
+    p.edgeIrrMotion = (float)dbl(P_EDGE_IRR_MOTION, t);
+    p.gateDefocus = (float)dbl(P_DEFOCUS, t);
     p.opticalSoft = (float)dbl(P_OPTICAL, t);
     p.perfOn = boolean(P_PERF_ON, t);
     p.perfStyle = choice(P_PERF_STYLE, t);
@@ -347,6 +355,7 @@ void PsdvFilmGate::changedParam(const OFX::InstanceChangedArgs& args, const std:
             setC(P_NEIGHBORS, q.neighbors); setD(P_SPACING, q.spacing); setB(P_PERF_ON, q.perfOn != 0);
             setC(P_PERF_STYLE, q.perfStyle); setD(P_EDGE_SOFT, q.edgeSoft); setD(P_EDGE_DARK, q.edgeDark);
             setD(P_EDGE_DARK_W, q.edgeDarkWidth); setD(P_CORNER, q.corner); setD(P_DUST, q.dust);
+            setD(P_EDGE_IRR, q.irregularity); setD(P_EDGE_IRR_MOTION, q.irrMotion); setD(P_DEFOCUS, q.defocus);
             setD(P_FIBRES, q.fibres); setD(P_GATE_HAIR, q.gateHair); setD(P_SCRATCHES, q.scratches);
         }
     } else if (name == P_WEAVE_PRESET) {
@@ -534,6 +543,14 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     dparam(desc, page, gG, P_EDGE_DARK, "Gate Edge Darkness", "Light fall-off of the picture along the gate edge.", 0.35, 0.0, 1.0, 0.0, 1.0);
     dparam(desc, page, gG, P_EDGE_DARK_W, "Edge Darkness Width", "Width of the fall-off, fraction of the gate height.", 0.05, 0.001, 0.5, 0.005, 0.2);
     dparam(desc, page, gG, P_CORNER, "Corner Roundness", "Multiplier of the real corner radius of the gauge.", 1.6, 0.0, 10.0, 0.0, 4.0);
+    dparam(desc, page, gG, P_EDGE_IRR, "Edge Irregularity (µm)",
+           "Small bumps in and out along the gate outline, in micrometres on the film.", 14.0, 0.0, 500.0, 0.0, 80.0);
+    dparam(desc, page, gG, P_EDGE_IRR_SIZE, "Irregularity Size", "Length of the bumps along the edge (multiplier).", 1.0, 0.05, 10.0, 0.2, 4.0);
+    dparam(desc, page, gG, P_EDGE_IRR_MOTION, "Irregularity Motion",
+           "0 = the outline is fixed (it belongs to the gate), 1 = a new outline every frame. Not weave, not flicker: only the outline changes.",
+           0.6, 0.0, 1.0, 0.0, 1.0);
+    dparam(desc, page, gG, P_DEFOCUS, "Gate Defocus",
+           "Out-of-focus gate: wider soft edges and rounded, darker corners, like an aperture far from the focal plane.", 0.15, 0.0, 5.0, 0.0, 2.0);
     dparam(desc, page, gG, P_OPTICAL, "Optical Softness", "Lens and emulsion softness, physical size on the film.", 1.0, 0.0, 20.0, 0.0, 5.0);
     bparam(desc, page, gG, P_PERF_ON, "Show Perforations", "Sprocket holes beside the gate.", true);
     static const char* pst[] = {"Dark Hole", "Backlit (Scanner Light)", "Outline Only"};

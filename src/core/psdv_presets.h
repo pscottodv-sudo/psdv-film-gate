@@ -72,17 +72,18 @@ struct PsdvGatePreset
     int format, framing; float frameSize; int neighbors; float spacing;
     int perfOn, perfStyle; float edgeSoft, edgeDark, edgeDarkWidth, corner;
     float dust, fibres, gateHair, scratches;
+    float irregularity, irrMotion, defocus;   // moving outline (um), 0..1, gate defocus
 };
 // Looks, not measurements: geometry comes from the gauge table, these only choose
 // how the scan is framed and dressed.
 static const PsdvGatePreset kGatePresets[] = {
-    {"Custom",                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {"Super 8 Scan - Dark Perforation",          1, 0, 0.76f, 2, 0.12f, 1, 0, 1.6f, 0.35f, 0.05f, 1.6f, 0.15f, 0.04f, 0.0f, 0.06f},
-    {"Regular 8 Scan - Dark Perforation",        0, 0, 0.74f, 2, 0.10f, 1, 0, 1.4f, 0.35f, 0.05f, 1.3f, 0.20f, 0.12f, 0.0f, 0.08f},
-    {"16mm Scan - Dark Perforations",            2, 0, 0.72f, 2, 0.05f, 1, 0, 1.2f, 0.25f, 0.04f, 1.2f, 0.10f, 0.06f, 0.0f, 0.04f},
-    {"35mm Full Aperture Scan - Backlit",        5, 0, 0.70f, 2, 0.00f, 1, 1, 1.0f, 0.15f, 0.03f, 1.0f, 0.05f, 0.03f, 0.0f, 0.02f},
-    {"Super 8 Picture Only (centred, no holes)", 1, 1, 1.00f, 0, 0.00f, 0, 0, 1.4f, 0.30f, 0.05f, 1.6f, 0.12f, 0.08f, 0.0f, 0.04f},
-    {"Regular 8 Picture Only (centred, no holes)",0, 1, 1.00f, 0, 0.00f, 0, 0, 1.4f, 0.30f, 0.05f, 1.3f, 0.15f, 0.10f, 0.0f, 0.05f},
-    {"Clean Gate (no dirt)",                     1, 0, 0.76f, 2, 0.12f, 1, 0, 1.0f, 0.10f, 0.05f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+    {"Custom",                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0f, 0.00f, 0.00f},
+    {"Super 8 Scan - Dark Perforation",          1, 0, 0.76f, 2, 0.12f, 1, 0, 1.6f, 0.35f, 0.05f, 1.6f, 0.15f, 0.04f, 0.0f, 0.06f, 14.0f, 0.60f, 0.15f},
+    {"Regular 8 Scan - Dark Perforation",        0, 0, 0.74f, 2, 0.10f, 1, 0, 1.4f, 0.35f, 0.05f, 1.3f, 0.20f, 0.12f, 0.0f, 0.08f, 16.0f, 0.60f, 0.20f},
+    {"16mm Scan - Dark Perforations",            2, 0, 0.72f, 2, 0.05f, 1, 0, 1.2f, 0.25f, 0.04f, 1.2f, 0.10f, 0.06f, 0.0f, 0.04f, 10.0f, 0.50f, 0.10f},
+    {"35mm Full Aperture Scan - Backlit",        5, 0, 0.70f, 2, 0.00f, 1, 1, 1.0f, 0.15f, 0.03f, 1.0f, 0.05f, 0.03f, 0.0f, 0.02f, 6.0f, 0.40f, 0.05f},
+    {"Super 8 Picture Only (centred, no holes)", 1, 1, 1.00f, 0, 0.00f, 0, 0, 1.4f, 0.30f, 0.05f, 1.6f, 0.12f, 0.08f, 0.0f, 0.04f, 12.0f, 0.50f, 0.15f},
+    {"Regular 8 Picture Only (centred, no holes)",0, 1, 1.00f, 0, 0.00f, 0, 0, 1.4f, 0.30f, 0.05f, 1.3f, 0.15f, 0.10f, 0.0f, 0.05f, 12.0f, 0.50f, 0.20f},
+    {"Clean Gate (no dirt)",                     1, 0, 0.76f, 2, 0.12f, 1, 0, 1.0f, 0.10f, 0.05f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 4.0f, 0.30f, 0.00f},
 };
 static const int kGatePresetCount = sizeof(kGatePresets) / sizeof(kGatePresets[0]);

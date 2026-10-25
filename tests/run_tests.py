@@ -182,7 +182,8 @@ def test_framing():
     for W, H in ((1920, 1080), (1440, 1080), (1080, 1920)):
         white = np.ones((H, W, 3), np.float32)
         for fmt, gw, gh in ((1, 5.69, 4.22), (0, 4.90, 3.60), (2, 10.26, 7.49), (5, 24.89, 18.67)):
-            out, nf = render(white, dict(OFF, encoding=2, format=fmt, gateFraming=1, neighbors=0, perfOn=0, edgeSoftness=0))
+            out, nf = render(white, dict(OFF, encoding=2, format=fmt, gateFraming=1, neighbors=0, perfOn=0, edgeSoftness=0,
+                                          edgeIrregularity=0, gateDefocus=0))
             m = out[..., 1] > 0.5
             ys, xs = np.nonzero(m)
             cx, cy = (xs.min() + xs.max() + 1) / 2, (ys.min() + ys.max() + 1) / 2
@@ -192,6 +193,21 @@ def test_framing():
             ok = abs(cx - W / 2) <= 1 and abs(cy - H / 2) <= 1 and abs((xs.max() - xs.min() + 1) - gw / mm) <= 2.5 and blk == 0.0
             record(f"framing: Fit Gate To Screen, format {fmt}, {W}x{H}", ok and nf == 0,
                    f"picture {xs.max()-xs.min()+1}x{ys.max()-ys.min()+1}px centre ({cx},{cy}); outside max {blk}")
+
+
+def test_fit_soft_edge():
+    """Fit Gate To Screen with irregular + defocused edge: nothing reaches the screen border"""
+    for W, H in ((1920, 1080), (1080, 1920)):
+        white = np.ones((H, W, 3), np.float32)
+        worst = 0.0
+        for fmt in (0, 1, 2, 5):
+            for defo, irr in ((0.15, 14), (2.0, 40), (5.0, 120)):
+                out, _ = render(white, dict(OFF, encoding=2, format=fmt, gateFraming=1, neighbors=0, perfOn=0,
+                                            gateDefocus=defo, edgeIrregularity=irr, frameIndex=7))
+                border = np.concatenate([out[0], out[-1], out[:, 0], out[:, -1]])
+                worst = max(worst, float(border.max()))
+        record(f"framing: Fit Gate keeps soft / irregular edges on screen, {W}x{H}", worst < 0.01,
+               f"max value on the screen border {worst:.4f}")
 
 
 def test_neighbors():
@@ -273,7 +289,7 @@ def test_sweep():
 
 def main():
     t = time.time()
-    for fn in (test_identity, test_grain_calibration, test_grain_double_x, test_grain_temporal, test_neighbor_visibility, test_framing, test_neighbors,
+    for fn in (test_identity, test_grain_calibration, test_grain_double_x, test_grain_temporal, test_neighbor_visibility, test_framing, test_fit_soft_edge, test_neighbors,
                test_weave_um, test_perforations_fixed, test_sweep):
         fn()
     ok = sum(r["ok"] for r in RESULTS)
