@@ -256,7 +256,8 @@ def test_perforations_fixed():
     white = np.ones((H, W, 3), np.float32)
     tops = []
     for f in range(1, 9):
-        out, _ = render(white, dict(OFF, encoding=2, weaveOn=1, weaveV=40, scanJitter=0, frameIndex=f, perfStyle=1, neighbors=0))
+        out, _ = render(white, dict(OFF, encoding=2, weaveOn=1, weaveV=40, scanJitter=0, frameIndex=f, perfStyle=1, neighbors=0,
+                                    perfIrregularity=0, perfDefocus=0))
         # perforation column (Super 8, film left edge) in screen coords: centre gate
         mm = 4.22 / (0.76 * H)
         x = int(W / 2 + (-7.976 / 2 + 0.51 + 0.457 - 0.327) / mm)

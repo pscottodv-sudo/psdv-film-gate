@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(psdv_film_gate VERSION 1.4.0 LANGUAGES CXX)
+project(psdv_film_gate VERSION 1.5.0 LANGUAGES CXX)
 
 # psdv-film gate emulation - OpenFX plugin for DaVinci Resolve.
 #   macOS: universal (arm64 + x86_64) bundle with Metal rendering.

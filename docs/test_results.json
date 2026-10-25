@@ -131,13 +131,13 @@
  },
  {
   "test": "perforations stay fixed while the picture weaves",
-  "ok": true,
-  "detail": "perforation top rows {np.int64(429)}"
+  "ok": false,
+  "detail": "perforation top rows {np.int64(427), np.int64(428)}"
  },
  {
   "test": "sweep: 9 formats x 3 neighbour modes x 4 emulsions x 3 perforation styles",
   "ok": true,
-  "detail": "324 renders, 0 with NaN/Inf, 12s"
+  "detail": "324 renders, 0 with NaN/Inf, 13s"
  },
  {
   "test": "extreme values on every slider",

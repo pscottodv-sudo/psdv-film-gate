@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 - defocus delle perforazioni
+- **Perforation Defocus**: foro fuori fuoco, bordo morbido; la luce si allarga e si ammorbidisce mantenendo i colori.
+- Dove c'è la luce delle perforazioni l'immagine sottostante sparisce (la luce sta sulla pellicola non impressionata, non sopra l'immagine); dentro il foro l'immagine era già nera.
+
 ## 1.4.0 - luce delle perforazioni rifatta sul riferimento Dehancer
 - Nuovo profilo a tre strati: linea sottile caldo-bianca sul bordo del foro, bagliore arancio che **pende da un lato**, banda **blu** poco distante dal bordo ruotata di 80° rispetto all'arancio (di default: arancio a sinistra, blu sotto, bordo opposto pulito).
 - Controlli: **Opacity**, Exposure (EV), Rim Width, Glow Size, Rim / Glow / Cool Band Colour, **Cool Band**, **Lean** (uniforme ↔ da un lato), **Light Direction (°)**, Variation, Variation Speed, Light Seed. 8 preset.

@@ -1,4 +1,4 @@
-# psdv-film gate emulation 1.4
+# psdv-film gate emulation 1.5
 
 Plugin **OpenFX** per **DaVinci Resolve su macOS** (rendering **Metal**, bundle universale Apple Silicon + Intel) che emula la finestra di ripresa di una cinepresa: gate e perforazioni, gate weave, grana di emulsione e luce delle perforazioni. Ogni sezione si attiva da sola, ha i suoi preset e un controllo manuale completo. L'interfaccia è in inglese.
 
@@ -124,7 +124,7 @@ La grana è legata alla pellicola in mm. Un Super 8 mostra quindi più grana di 
 ### Perforation Light
 È la luce del retroilluminatore dello scanner che passa dal foro e si diffonde intorno (halation), ricostruita su un fotogramma dell'Overscan di Dehancer: foro nero, linea sottile caldo-bianca sul bordo, bagliore arancio da un lato, banda blu poco distante dal bordo. È sempre presente con le perforazioni (si spegne con *Show Perforations* o *Opacity* = 0) e non è mai statica.
 Preset: **Negative Scan Halation** (default), Soft Warm Glow, Hot White Edge, Deep Red Burn, Subtle Edge, Unstable Backlight, Strong Blue Fringe, Even Rim (no lean).
-Controlli: *Opacity*, *Exposure (EV)*, *Rim Width*, *Glow Size*, *Rim / Glow / Cool Band Colour*, *Cool Band*, *Lean*, *Light Direction (°)*, *Variation*, *Variation Speed*, *Light Seed*. Nella sezione del gate: *Perforation Irregularity (µm)* per il contorno irregolare dei fori.
+Controlli: *Opacity*, *Exposure (EV)*, *Rim Width*, *Glow Size*, *Rim / Glow / Cool Band Colour*, *Cool Band*, *Lean*, *Light Direction (°)*, *Variation*, *Variation Speed*, *Light Seed*. Nella sezione del gate: *Perforation Irregularity (µm)* per il contorno irregolare dei fori e *Perforation Defocus* per sfocarli. Se un foro finisce sopra l'immagine, l'immagine sotto il foro e sotto la sua luce sparisce.
 
 ## 5. Problemi noti e soluzioni
 

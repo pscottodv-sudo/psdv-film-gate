@@ -666,7 +666,13 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
             dA = dA + n * pirr;
         }
         float aa = 0.6f * mmPerPx;
-        hole = (1.0f - ps_smooth(-aa, aa, dPerf)) * ps_sat(p.perfOpacity);
+        // perforation defocus: Gaussian edge, centred on the outline in log/gamma view
+        float pdef = ps_max(p.perfDefocus, 0.0f) * 0.02f * ph;
+        float sgP = ps_sqrt(0.25f * aa * aa + pdef * pdef);
+        float zP = dPerf * 0.70710678f / sgP;
+        float cov = 0.5f - 0.5f * (zP >= 0.0f ? psdv_erf(zP) : -psdv_erf(-zP));
+        if (pdef > 0.0f) cov = 1.0f - (1.0f - cov) * (1.0f - cov) * (1.0f - cov);
+        hole = cov * ps_sat(p.perfOpacity);
         if (p.perfStyle == 0) E = E * (1.0f - hole);                                   // dark hole
         else if (p.perfStyle == 1) E = ps_mix3(E, P3(1.0f, 0.96f, 0.90f), hole);        // backlit
         else {                                                                           // outline
@@ -691,7 +697,8 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
             float d = dPerf;
             float holeId = ps_floor(rel + 0.5f) * 2.0f + (float)useB;
             int ls = 300 + p.leakSeed * 131;
-            float rimW = 0.0040f * ph * ps_max(p.perfRim, 0.05f);
+            float rimW0 = 0.0040f * ph * ps_max(p.perfRim, 0.05f);
+            float rimW = ps_sqrt(rimW0 * rimW0 + pdef * pdef);   // defocus widens and dims the rim
             float hal = ps_max(p.perfHalo, 0.05f);
             float din = ps_max(-d, 0.0f);
             float inner = ps_exp(-din / (0.5f * rimW));          // the hole stays black
@@ -719,7 +726,8 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
 
             // ---- glow: orange, anchored on the edge, only on the leaning side
             float dout = ps_max(d, 0.0f);
-            float g1 = dout / (0.028f * ph * hal);
+            float glowW = ps_sqrt((0.028f * ph * hal) * (0.028f * ph * hal) + pdef * pdef);
+            float g1 = dout / glowW;
             float fG = ps_lerp(1.0f, facing * facing * facing, ps_sat(lean));
             float glow = (0.7f * ps_exp(-1.5f * g1) + 0.3f * ps_exp(-0.35f * g1)) * ps_exp(-0.06f * g1 * g1) * inner * fG;
             glow = glow * (0.75f + 0.5f * psdv_noise2(ca * 1.2f + 9.0f + holeId, sa * 1.2f + tSlow * 0.8f, ls + 9));
@@ -729,15 +737,22 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
             float dcx = ps_cos(dirC), dcy = ps_sin(dirC);
             float facingC = 0.5f + 0.5f * (ca * (useB ? -dcx : dcx) + sa * dcy);
             float fC = ps_lerp(1.0f, ps_pow(facingC, 6.0f), ps_sat(lean));
-            float hz = (dout - 0.020f * ph * hal) / (0.040f * ph * hal);
+            float bandW = ps_sqrt((0.040f * ph * hal) * (0.040f * ph * hal) + pdef * pdef);
+            float hz = (dout - 0.020f * ph * hal - 0.5f * pdef) / bandW;
             float halo = ps_exp(-hz * hz) * fC * (1.0f - 0.85f * fG) * ps_smooth(-0.5f * rimW, 2.0f * rimW, d);   // not under the orange, never inside the hole
 
             ps3 coreC = P3(ps_max(p.coreR, 0.0f), ps_max(p.coreG, 0.0f), ps_max(p.coreB, 0.0f));
             ps3 glowC = P3(ps_max(p.glowR, 0.0f), ps_max(p.glowG, 0.0f), ps_max(p.glowB, 0.0f));
             ps3 coolC = P3(ps_max(p.outerR, 0.0f), ps_max(p.outerG, 0.0f), ps_max(p.outerB, 0.0f));
             float k = ps_exp2(p.perfLightEV) * ps_max(inten, 0.0f);
-            ps3 Lp = coreC * (0.80f * rim) + glowC * (0.90f * glow) + coolC * (0.09f * ps_max(p.perfFringe, 0.0f) * halo);
-            E = E + Lp * (k * ps_sat(p.perfLightOpacity) * ps_sat(p.perfOpacity));
+            ps3 Lp = coreC * (0.80f * rim * (rimW0 / rimW)) + glowC * (0.90f * glow * ps_sqrt(0.028f * ph * hal / glowW)) + coolC * (0.09f * ps_max(p.perfFringe, 0.0f) * halo);
+            float amt = k * ps_sat(p.perfLightOpacity) * ps_sat(p.perfOpacity);
+            Lp = Lp * amt;
+            // the light sits on unexposed film: where it is, the picture underneath goes
+            // (it does not glow on top of the image)
+            float lum = ps_max(Lp.x, ps_max(Lp.y, Lp.z));
+            float occ = ps_sat(lum * 6.0f) * ps_sat(p.perfOpacity);
+            E = E * (1.0f - occ) + Lp;
         }
     }
     return psdv_encode(E, enc);

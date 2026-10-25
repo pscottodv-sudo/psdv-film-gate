@@ -22,7 +22,7 @@
     "Grain presets: only Double-X 5222 (RMS 14) and the Ektachrome/E100 preset (RMS 8) use published values; the others are estimates."
 #define kPluginIdentifier "it.psdv.filmgate"
 #define kPluginVersionMajor 1
-#define kPluginVersionMinor 4
+#define kPluginVersionMinor 5
 
 // ------------------------------------------------------------------ parameter names
 // input
@@ -60,6 +60,7 @@
 #define P_PERF_SIZE "perforationSize"
 #define P_PERF_OPACITY "perforationOpacity"
 #define P_PERF_IRR "perforationIrregularity"
+#define P_PERF_DEFOCUS "perforationDefocus"
 #define P_DUST "dust"
 #define P_FIBRES "fibres"
 #define P_GATE_HAIR "gateHair"
@@ -229,6 +230,7 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
     p.perfScale = (float)dbl(P_PERF_SIZE, t);
     p.perfOpacity = (float)dbl(P_PERF_OPACITY, t);
     p.perfIrregularity = (float)dbl(P_PERF_IRR, t);
+    p.perfDefocus = (float)dbl(P_PERF_DEFOCUS, t);
     p.dust = (float)dbl(P_DUST, t); p.fibres = (float)dbl(P_FIBRES, t);
     p.gateHair = (float)dbl(P_GATE_HAIR, t); p.scratches = (float)dbl(P_SCRATCHES, t);
     p.dirtPolarity = choice(P_DIRT_POL, t);
@@ -569,6 +571,7 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     cparam(desc, page, gG, P_PERF_SIDE, "Perforation Side", "Where the perforations are drawn.", psd, 4, 0);
     dparam(desc, page, gG, P_PERF_SIZE, "Perforation Size", "Multiplier of the real perforation size.", 1.0, 0.1, 4.0, 0.5, 2.0);
     dparam(desc, page, gG, P_PERF_OPACITY, "Perforation Opacity", "", 1.0, 0.0, 1.0, 0.0, 1.0);
+    dparam(desc, page, gG, P_PERF_DEFOCUS, "Perforation Defocus", "Out-of-focus holes: soft edge, softer and wider light.", 0.3, 0.0, 10.0, 0.0, 4.0);
     dparam(desc, page, gG, P_PERF_IRR, "Perforation Irregularity (µm)",
            "Bumps along the outline of the holes. Fixed part + moving part (Irregularity Motion); the perforation light follows them.", 6.0, 0.0, 200.0, 0.0, 40.0);
     dparam(desc, page, gG, P_DUST, "Dust", "Dust specks on the film (same physical size on every gauge).", 0.15, 0.0, 10.0, 0.0, 2.0);

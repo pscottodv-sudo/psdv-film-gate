@@ -40,6 +40,7 @@ struct PsdvParams
     int   perfSide;       // 0 gauge default, 1 left, 2 right, 3 both
     float perfScale;
     float perfOpacity;
+    float perfDefocus;      // soft, out-of-focus hole edge and light
     float perfIrregularity; // bumps of the hole outline, micrometres (uses Irregularity Motion)
     float dust, fibres, gateHair, scratches;
     int   dirtPolarity;   // 0 auto, 1 dark, 2 bright
