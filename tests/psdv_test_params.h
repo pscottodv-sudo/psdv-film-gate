@@ -13,7 +13,7 @@ inline void psdvDefaults(PsdvParams& p)
     p.centreOn = 0; p.imageFit = 0; p.imageZoom = 1; p.neighbors = 2; p.havePrev = 0; p.haveNext = 0;
     p.frameSpacing = 0.12f; p.edgeSoftness = 1.6f; p.edgeDarkness = 0.35f; p.edgeDarkWidth = 0.05f;
     p.cornerRadius = 1.6f; p.opticalSoft = 1.0f; p.edgeIrregularity = 14.0f; p.edgeIrrSize = 1.0f; p.edgeIrrMotion = 0.6f; p.gateDefocus = 0.15f; p.perfOn = 1; p.perfStyle = 0; p.perfSide = 0;
-    p.perfScale = 1; p.perfOpacity = 1; p.perfIrregularity = 6.0f; p.perfDefocus = 0.3f; p.dust = 0.15f; p.fibres = 0.04f; p.gateHair = 0; p.scratches = 0.06f;
+    p.perfScale = 1; p.perfPosMode = 0; p.perfShift = 0; p.perfOpacity = 1; p.perfIrregularity = 6.0f; p.perfDefocus = 0.3f; p.dust = 0.15f; p.fibres = 0.04f; p.gateHair = 0; p.scratches = 0.06f;
     p.weaveOn = 1; p.weaveH = 8; p.weaveV = 18; p.weaveRandom = 0.65f; p.weaveCycle = 6; p.rotation = 0.05f;
     p.scanJitter = 2; p.flicker = 0.10f; p.flickerRandom = 0.6f;
     p.grainOn = 1; p.emulsion = 1; p.rms = 8; p.grainIntensity = 1; p.grainSize = 1;
@@ -32,7 +32,7 @@ inline bool psdvSetParam(PsdvParams& p, const std::string& k, double v)
     FIELD_F(frameSize) FIELD_F(zoom) FIELD_I(centreOn) FIELD_F(posX) FIELD_F(posY) FIELD_I(imageFit) FIELD_F(imageZoom)
     FIELD_F(panX) FIELD_F(panY) FIELD_I(neighbors) FIELD_F(frameSpacing) FIELD_F(edgeSoftness) FIELD_F(edgeDarkness)
     FIELD_F(edgeDarkWidth) FIELD_F(cornerRadius) FIELD_F(edgeIrregularity) FIELD_F(edgeIrrSize) FIELD_F(edgeIrrMotion) FIELD_F(gateDefocus) FIELD_F(opticalSoft) FIELD_I(perfOn) FIELD_I(perfStyle) FIELD_I(perfSide)
-    FIELD_F(perfScale) FIELD_F(perfOpacity) FIELD_F(perfIrregularity) FIELD_F(perfDefocus) FIELD_F(dust) FIELD_F(fibres) FIELD_F(gateHair) FIELD_F(scratches)
+    FIELD_F(perfScale) FIELD_I(perfPosMode) FIELD_F(perfShift) FIELD_F(perfOpacity) FIELD_F(perfIrregularity) FIELD_F(perfDefocus) FIELD_F(dust) FIELD_F(fibres) FIELD_F(gateHair) FIELD_F(scratches)
     FIELD_I(dirtPolarity) FIELD_I(weaveOn) FIELD_F(weaveH) FIELD_F(weaveV) FIELD_F(weaveRandom) FIELD_F(weaveCycle)
     FIELD_F(rotation) FIELD_F(scanJitter) FIELD_F(flicker) FIELD_F(flickerRandom) FIELD_I(weaveSeed) FIELD_I(grainOn)
     FIELD_I(emulsion) FIELD_F(rms) FIELD_F(grainIntensity) FIELD_F(grainSize) FIELD_F(shadowResponse) FIELD_F(midResponse)

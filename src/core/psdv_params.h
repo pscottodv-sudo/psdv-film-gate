@@ -38,7 +38,9 @@ struct PsdvParams
     int   perfOn;
     int   perfStyle;      // 0 dark hole, 1 backlit (scanner light), 2 outline
     int   perfSide;       // 0 gauge default, 1 left, 2 right, 3 both
-    float perfScale;
+    float perfScale;      // always 1 in the plugin: real gauge size
+    int   perfPosMode;    // 0 faithful scan position, 1 custom
+    float perfShift;      // custom: mm on the film, + outwards (towards the film edge)
     float perfOpacity;
     float perfDefocus;      // soft, out-of-focus hole edge and light
     float perfIrregularity; // bumps of the hole outline, micrometres (uses Irregularity Motion)

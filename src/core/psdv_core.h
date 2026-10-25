@@ -92,7 +92,7 @@ PS_INLINE PsdvFormat psdv_format(int f)
         g.perfW = 1.83f; g.perfH = 1.27f; g.perfR = 0.25f; g.perfEdge = 0.90f; g.perfPhase = 0.5f;
         g.gateR = 0.25f; g.gateSoft = 0.015f;
     } else if (f == 2 || f == 3) {
-        g.filmW = 16.0f; g.gateW = 10.26f; g.gateH = 7.49f; g.pitch = 7.605f; g.gateCx = 0.0f;
+        g.filmW = 15.95f; g.gateW = 10.26f; g.gateH = 7.49f; g.pitch = 7.605f; g.gateCx = 0.0f;
         g.perfW = 1.829f; g.perfH = 1.27f; g.perfR = 0.25f; g.perfEdge = 0.90f; g.perfPhase = 0.5f;
         g.gateR = 0.25f; g.softK = 1.2f; g.perfBoth = 1;
         if (f == 3) { g.gateW = 12.52f; g.gateH = 7.41f; g.gateCx = 1.13f; g.perfBoth = 0; }
@@ -104,8 +104,8 @@ PS_INLINE PsdvFormat psdv_format(int f)
         if (f == 6) { g.gateH = 13.87f; g.pitch = 14.22f; g.perfN = 3; g.perfPhase = 0.0f; }
         if (f == 7) { g.gateW = 22.00f; g.gateH = 9.47f; g.pitch = 9.48f; g.perfN = 2; g.gateCx = 1.445f; }
     } else if (f == 8) {
-        g.filmW = 65.0f; g.gateW = 52.48f; g.gateH = 23.01f; g.pitch = 23.75f; g.gateCx = 0.0f;
-        g.perfW = 2.794f; g.perfH = 1.981f; g.perfR = 0.50f; g.perfEdge = 2.85f; g.perfPhase = 0.0f;
+        g.filmW = 64.97f; g.gateW = 52.48f; g.gateH = 23.01f; g.pitch = 23.70f; g.gateCx = 0.0f;
+        g.perfW = 2.794f; g.perfH = 1.981f; g.perfR = 0.51f; g.perfEdge = 2.97f; g.perfPhase = 0.0f;
         g.perfN = 5; g.perfBoth = 1; g.gateR = 0.50f; g.gateSoft = 0.040f; g.softK = 1.0f;
     }
     return g;
@@ -443,6 +443,10 @@ PS_INLINE float psdv_mm_per_px(PS_CONSTANT_REF PsdvParams& p, PsdvFormat g, floa
         float edge = 2.5f * ps_sqrt(0.25f * pen * pen + defo * defo) + 1.5f * ps_max(p.edgeIrregularity, 0.0f) * 0.001f;
         m = ps_max((gateW + 2.0f * edge) / W, (gateH + 2.0f * edge) / H);
     }
+    else if (p.gateFraming == 3) {                                                  // overscan: whole film width
+        float fw = g.filmW * 1.04f;
+        m = ps_max(fw / W, (gateH + 0.30f * (g.pitch - gateH) + 0.1f * gateH) / H);
+    }
     else m = gateH / (ps_max(p.frameSize, 0.05f) * H);                               // manual frame size
     return m / ps_max(p.zoom, 0.01f);
 }
@@ -607,7 +611,7 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
     float tjy = (psdv_rand(T, 409, 5 + p.weaveSeed) - 0.5f) * 3.4641f * jit;
     float xs = ((float)px + 0.5f - 0.5f * W - p.posX * W) * mmPerPx - tjx;
     float yy = ((float)py + 0.5f - 0.5f * H - p.posY * H) * mmPerPx - tjy;
-    float xx = xs + ((gateOn && p.centreOn == 0) || !gateOn ? g.gateCx : 0.0f);
+    float xx = xs + (((gateOn && p.centreOn == 0 && p.gateFraming != 3) || !gateOn) ? g.gateCx : 0.0f);   // overscan: film centre line in the middle
 
     // ---- frame slot: 0 current, +1 above = previous, -1 below = next
     int slot = gateOn ? (int)ps_floor(yy / pitch + 0.5f) : 0;
@@ -638,7 +642,9 @@ PS_INLINE ps3 psdv_render_pixel(PS_THREAD const SRC& s, PS_CONSTANT_REF PsdvPara
         float spp = pitch / (float)g.perfN;
         float rel = yy / spp - g.perfPhase;
         float hy = yy - (ps_floor(rel + 0.5f) + g.perfPhase) * spp;
-        float pxL = -0.5f * g.filmW + g.perfEdge + 0.5f * g.perfW;
+        // perforation centre across the film (SMPTE edge distance); Custom moves it
+        // outwards (+) or towards the picture (-), the size never changes
+        float pxL = -0.5f * g.filmW + g.perfEdge + 0.5f * g.perfW - (p.perfPosMode == 1 ? p.perfShift : 0.0f);
         int both = p.perfSide == 3 ? 1 : (p.perfSide == 0 ? g.perfBoth : 0);
         int left = p.perfSide == 2 ? 0 : 1;
         float xL = left ? xx - pxL : xx + pxL;

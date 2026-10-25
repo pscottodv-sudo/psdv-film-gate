@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 - perforazioni fedeli (overscan)
+- **Dimensione fissa e reale**: tolto lo slider *Perforation Size*. La perforazione ha sempre la misura dello standard del formato scelto (R8, S8, 16, S16, 35, 65) e scala solo insieme a tutta la pellicola.
+- **Perforation Position**: *Scan (faithful overscan)* mette i fori esattamente dove li prevede lo standard; *Custom* sblocca **Perforation Shift (mm)** per spostarli verso il bordo della pellicola (+) o verso l'immagine (−), senza cambiarne la misura.
+- Nuova inquadratura **Overscan (Full Film Width)**: tutta la larghezza della pellicola, centrata sulla mezzeria del film come una vera scansione overscan.
+- Misure ricontrollate sugli standard SMPTE: 16mm larghezza 15.95 mm, bordo→foro 0.90 mm (ST 109); 65mm larghezza 64.97 mm, bordo→foro 2.97 mm, raggio 0.51 mm, passo negativo 4.740 mm → 23.70 mm per 5 perforazioni (ST 145).
+
 ## 1.7.0 - anello "bruciato" come Dehancer
 - Profilo della luce delle perforazioni rifatto misurando un fotogramma Dehancer (valori Rec.709 riportati in luce lineare): anello crema quasi bruciato sul bordo, banda arancio piatta e satura che finisce di colpo (~6% dell'altezza del foro), banda blu più lontana sotto il foro.
 - Arancio più deciso sul lato verso cui pende la luce, quasi assente sul lato opposto.

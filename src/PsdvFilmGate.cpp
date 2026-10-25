@@ -22,7 +22,7 @@
     "Grain presets: only Double-X 5222 (RMS 14) and the Ektachrome/E100 preset (RMS 8) use published values; the others are estimates."
 #define kPluginIdentifier "it.psdv.filmgate"
 #define kPluginVersionMajor 1
-#define kPluginVersionMinor 7
+#define kPluginVersionMinor 8
 
 // ------------------------------------------------------------------ parameter names
 // input
@@ -57,7 +57,8 @@
 #define P_PERF_ON "showPerforations"
 #define P_PERF_STYLE "perforationStyle"
 #define P_PERF_SIDE "perforationSide"
-#define P_PERF_SIZE "perforationSize"
+#define P_PERF_POSMODE "perforationPosition"
+#define P_PERF_SHIFT "perforationShift"
 #define P_PERF_OPACITY "perforationOpacity"
 #define P_PERF_IRR "perforationIrregularity"
 #define P_PERF_DEFOCUS "perforationDefocus"
@@ -229,7 +230,9 @@ void PsdvFilmGate::fillParams(PsdvParams& p, double t, int w, int h, double rend
     p.perfOn = boolean(P_PERF_ON, t);
     p.perfStyle = choice(P_PERF_STYLE, t);
     p.perfSide = choice(P_PERF_SIDE, t);
-    p.perfScale = (float)dbl(P_PERF_SIZE, t);
+    p.perfScale = 1.0f;                                  // real size of the gauge, always
+    p.perfPosMode = choice(P_PERF_POSMODE, t);
+    p.perfShift = (float)dbl(P_PERF_SHIFT, t);
     p.perfOpacity = (float)dbl(P_PERF_OPACITY, t);
     p.perfIrregularity = (float)dbl(P_PERF_IRR, t);
     p.perfDefocus = (float)dbl(P_PERF_DEFOCUS, t);
@@ -534,8 +537,8 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     cparam(desc, page, gG, P_GATE_PRESET, "Gate Preset", "Loads a complete gate look into the controls below. Editing any control switches back to Custom.",
            gp.data(), (int)gp.size(), 1);
     cparam(desc, page, gG, P_FORMAT, "Film Format", "Gauge: real gate size, frame pitch and perforation geometry.", kFormatLabels, kFormatCount, 1);
-    static const char* framing[] = {"Manual Frame Size", "Fit Gate To Screen", "Fill Screen With Picture"};
-    cparam(desc, page, gG, P_FRAMING, "Gate Framing", "Fit = whole gate centred on screen; Fill = picture covers the screen.", framing, 3, 0);
+    static const char* framing[] = {"Manual Frame Size", "Fit Gate To Screen", "Fill Screen With Picture", "Overscan (Full Film Width)"};
+    cparam(desc, page, gG, P_FRAMING, "Gate Framing", "Fit = whole gate centred on screen; Fill = picture covers the screen; Overscan = the whole film width, edge to edge, centred on the film like a real overscan scan (perforations where they really are).", framing, 4, 0);
     dparam(desc, page, gG, P_FRAME_SIZE, "Frame Size", "Height of the gate as a fraction of the screen height (Manual Frame Size).", 0.76, 0.05, 2.0, 0.2, 1.2);
     static const char* asp[] = {"Native Gate", "4:3 (1.33)", "Academy (1.37)", "1.66", "16:9 (1.78)", "1.85", "Scope (2.39)", "Custom"};
     cparam(desc, page, gG, P_ASPECT, "Gate Aspect Ratio", "Shape of the gate opening. Native uses the real gauge aperture.", asp, 8, 0);
@@ -573,7 +576,13 @@ void PsdvFilmGateFactory::describeInContext(ImageEffectDescriptor& desc, Context
     cparam(desc, page, gG, P_PERF_STYLE, "Perforation Style", "Dark Hole matches scans with a black surround.", pst, 3, 0);
     static const char* psd[] = {"Format Default", "Left", "Right", "Both Sides"};
     cparam(desc, page, gG, P_PERF_SIDE, "Perforation Side", "Where the perforations are drawn.", psd, 4, 0);
-    dparam(desc, page, gG, P_PERF_SIZE, "Perforation Size", "Multiplier of the real perforation size.", 1.0, 0.1, 4.0, 0.5, 2.0);
+    static const char* ppos[] = {"Scan (faithful overscan)", "Custom"};
+    cparam(desc, page, gG, P_PERF_POSMODE, "Perforation Position",
+           "Scan: holes exactly where the standard puts them for the chosen gauge (size and position from SMPTE). "
+           "Custom: move them sideways with Perforation Shift; the size stays the real one.", ppos, 2, 0);
+    dparam(desc, page, gG, P_PERF_SHIFT, "Perforation Shift (mm)",
+           "Custom position only: + moves the holes outwards (towards the film edge), - towards the picture. Millimetres on the film.",
+           0.0, -10.0, 10.0, -2.0, 2.0);
     dparam(desc, page, gG, P_PERF_OPACITY, "Perforation Opacity", "", 1.0, 0.0, 1.0, 0.0, 1.0);
     dparam(desc, page, gG, P_PERF_DEFOCUS, "Perforation Defocus", "Out-of-focus holes: soft edge, softer and wider light.", 0.3, 0.0, 10.0, 0.0, 4.0);
     dparam(desc, page, gG, P_PERF_IRR, "Perforation Irregularity (µm)",
